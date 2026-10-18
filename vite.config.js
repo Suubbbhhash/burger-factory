@@ -592,5 +592,6 @@ export default defineConfig({
     watch: {
       ignored: ['**/data/**', '**/*.tmp', '**/sim_runtime*/**', '**/sim_logs/**']
     }
+    allowedHosts: ['the-burger-factory.onrender.com'],
   }
 });
