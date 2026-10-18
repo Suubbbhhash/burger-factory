@@ -1,0 +1,46 @@
+BURGER FACTORY SIMULATION - SUMMARY
+==============================================================================
+Config: node tools/simulate.mjs --spawn --days 4 --seed 42 --scale 1 --rush 60 --race-ms 4 --drop 0.004 --start 2026-10-17
+
+CUSTOMER FUNNEL
+  booking attempts        1164
+  first-choice success    922
+  took alternative slot   55
+  gave up (lost revenue)  187
+  client-side rejections  550
+  double-tap submits      28
+LIFECYCLE
+  cancelled 121 (wrong-phone retries 10) | no-show 83 | seated 749 | completed 962
+  late arrivals after no-show 5 | arrivals blocked by overstay 187 | walkouts 30
+WALK-INS
+  seated 213 | turned away 45
+NETWORK
+  requests dropped by fault injector 13
+
+PER-OUTLET (covers served, table utilisation of service hours 12:30-22:30)
+  anjuna      tables 18  covers   660  utilisation 28.5%
+  morjim      tables 20  covers   691  utilisation 26.5%
+  vagator     tables 14  covers   499  utilisation 28.6%
+  nerul       tables 10  covers   232  utilisation 17.9%
+  dona-paula  tables 12  covers   318  utilisation 21.0%
+  panaji      tables 16  covers   416  utilisation 18.7%
+  delhi       tables 20  covers   587  utilisation 23.8%
+
+LATENCY (ms) / PAYLOAD
+  GET /api/v1/reservations             n=  2995  p50=  13  p95=  64  p99= 117  max=  297  avg bytes=305031
+  POST /api/v1/reservations            n=  1230  p50=  16  p95=  70  p99= 100  max=  143  avg bytes=281239
+  PATCH /api/v1/reservations/status    n=  1961  p50=  23  p95=  77  p99= 110  max=  365  avg bytes=373054
+
+GET /reservations GROWTH BY VIRTUAL DAY
+  day  1  calls  1599  p95   77 ms  median payload 184 KB
+  day  2  calls   827  p95   51 ms  median payload 396 KB
+  day  3  calls   302  p95   44 ms  median payload 502 KB
+  day  4  calls   266  p95   44 ms  median payload 561 KB
+  day  5  calls     1  p95   12 ms  median payload 576 KB
+
+SSE LISTENERS (simulated manager tablets / customer pages)
+  manager-tablet-1 connected=true events=3177 (server accepted 3152 broadcasting writes) avg 331 KB/event, max 2530 KB
+  manager-tablet-2 connected=true events=3177 (server accepted 3152 broadcasting writes) avg 331 KB/event, max 2530 KB
+  customer-page    connected=true events=3177 (server accepted 3152 broadcasting writes) avg 331 KB/event, max 2530 KB
+
+FINDING COUNTS: DATA_INCONSISTENT=7, HOURS_VIOLATION=4, SERVER_ACCEPTS_INVALID=3, SERVER_NO_CONFLICT_CHECK=1, SECURITY_NO_AUTH=1, STATE_MACHINE=2, SECURITY_PII_EXPOSURE=1, OVERSTAY_BLOCKS_ARRIVAL=187, DOUBLE_BOOKING=7, LOST_UPDATE=7, GHOST_CONFIRMATION=4, SSE_PAYLOAD_O_N=1

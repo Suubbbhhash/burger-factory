@@ -1,0 +1,1003 @@
+{
+  "generated": "2026-10-18T04:52:41.864Z",
+  "root": "/home/z/my-project/work/burger-factory",
+  "server": "vite:3211",
+  "passed": 111,
+  "failed": 0,
+  "total": 111,
+  "allPass": true,
+  "latencyMs": {
+    "p50": 1.2,
+    "p95": 25.6,
+    "p99": 26.7,
+    "n": 124
+  },
+  "improvements": [
+    {
+      "id": "I-01",
+      "severity": "CRITICAL",
+      "defect": "Concurrent double-booking race (25 clients, one table)",
+      "fix": "Server mutex + best-fit allocation + 90-min overlap check + 409",
+      "cases": "T1.1a-d, T1.4a-b, T5.1a-d",
+      "verified": true
+    },
+    {
+      "id": "I-02",
+      "severity": "CRITICAL",
+      "defect": "Non-atomic writes could corrupt data file",
+      "fix": "tmp + rename atomic commit, always-parseable guarantee",
+      "cases": "T1.2, T1.3, T7.1, T7.1b",
+      "verified": true
+    },
+    {
+      "id": "I-03",
+      "severity": "HIGH",
+      "defect": "No input validation (negative guests, past dates, 25:99)",
+      "fix": "Server-side validation: guests 1-12, IST date, HH:MM, known outlet",
+      "cases": "T2.1a-f, T2.2a-d, T2.3a-d, T2.4a-b, T2.5a-b, T2.6a-b",
+      "verified": true
+    },
+    {
+      "id": "I-04",
+      "severity": "HIGH",
+      "defect": "PATCH accepted any status; terminal states could revive",
+      "fix": "Status whitelist + legal transition map + timestamps",
+      "cases": "T4.1a-d, T4.2a-d, T4.3a-d, T4.4a-d, T4.5a-b, T4.6, T4.7",
+      "verified": true
+    },
+    {
+      "id": "I-05",
+      "severity": "HIGH",
+      "defect": "Stored XSS via name/notes into innerHTML",
+      "fix": "API rejects < > everywhere + notes 500 cap + escapeHtml on all render paths",
+      "cases": "T3.1a-e, T3.2, T3.3, T3.4, S10.2a-b, U1a-c",
+      "verified": true
+    },
+    {
+      "id": "I-06",
+      "severity": "CRITICAL",
+      "defect": "Ghost confirmations (client wrote local first, swallowed errors)",
+      "fix": "Server-first mutations; failure leaves local mirror untouched",
+      "cases": "U3a-b, U4a-b, U5a-b, U7a-b, S10.6, S10.7",
+      "verified": true
+    },
+    {
+      "id": "I-07",
+      "severity": "HIGH",
+      "defect": "Walk-ins bypassed collision checks entirely",
+      "fix": "Walk-ins go through the same server allocator",
+      "cases": "T5.5, T4.5a-b, T8.2",
+      "verified": true
+    },
+    {
+      "id": "I-08",
+      "severity": "MEDIUM",
+      "defect": "UTC/IST date drift 00:00-05:30 IST",
+      "fix": "getTodayIST() on server + client; UTC idiom removed",
+      "cases": "T8.1a-c, T8.2, T8.3, T8.4, S10.3a-b, U2",
+      "verified": true
+    },
+    {
+      "id": "I-09",
+      "severity": "HIGH",
+      "defect": "Phone last-4 verification bypass on empty phone",
+      "fix": "Empty stored phone now fails verification",
+      "cases": "U6a-c",
+      "verified": true
+    },
+    {
+      "id": "I-10",
+      "severity": "MEDIUM",
+      "defect": "Hardcoded passcode prefilled in the DOM",
+      "fix": "value attribute removed, disclosure text removed, Auto-Fill kept",
+      "cases": "S10.1a-b",
+      "verified": true
+    },
+    {
+      "id": "I-11",
+      "severity": "MEDIUM",
+      "defect": "No clean way to reset state between test runs",
+      "fix": "POST /api/v1/reservations/reset test endpoint",
+      "cases": "T9.1, T9.2, T9.3",
+      "verified": true
+    },
+    {
+      "id": "I-12",
+      "severity": "HIGH",
+      "defect": "Floor-plan clock picked wrong reservation (unsorted find)",
+      "fix": "Sort by time before find; corrupt DB quarantined not wiped",
+      "cases": "S10.5, T7.2a-b, T7.3",
+      "verified": true
+    }
+  ],
+  "cases": [
+    {
+      "group": "P1 Concurrency & Atomicity",
+      "id": "T1.1a",
+      "name": "no invalid status codes in burst (only 200/201/409)",
+      "pass": true,
+      "detail": "clean",
+      "ms": 0
+    },
+    {
+      "group": "P1 Concurrency & Atomicity",
+      "id": "T1.1b",
+      "name": "concurrent successes <= zone capacity (expected <= 7)",
+      "pass": true,
+      "detail": "created=7 rejected409=18",
+      "ms": 0
+    },
+    {
+      "group": "P1 Concurrency & Atomicity",
+      "id": "T1.1c",
+      "name": "zero double-bookings after 25-way race",
+      "pass": true,
+      "detail": "clean",
+      "ms": 0
+    },
+    {
+      "group": "P1 Concurrency & Atomicity",
+      "id": "T1.1d",
+      "name": "every success has a distinct table",
+      "pass": true,
+      "detail": "ANJ-O3,ANJ-O4,ANJ-O5,ANJ-O6,ANJ-O7,ANJ-O8,ANJ-O9",
+      "ms": 0
+    },
+    {
+      "group": "P1 Concurrency & Atomicity",
+      "id": "T1.2",
+      "name": "DB file always parseable during concurrent writes (7364 polls)",
+      "pass": true,
+      "detail": "0 parse failures / 7364 polls",
+      "ms": 0
+    },
+    {
+      "group": "P1 Concurrency & Atomicity",
+      "id": "T1.3",
+      "name": "no .tmp / .corrupt-* residue left in data/",
+      "pass": true,
+      "detail": "clean",
+      "ms": 0
+    },
+    {
+      "group": "P1 Concurrency & Atomicity",
+      "id": "T1.4a",
+      "name": "89-min-later booking does NOT reuse same table",
+      "pass": true,
+      "detail": "ANJ-I1 vs ANJ-I2",
+      "ms": 0
+    },
+    {
+      "group": "P1 Concurrency & Atomicity",
+      "id": "T1.4b",
+      "name": "exactly +90:00 reuses the same table",
+      "pass": true,
+      "detail": "ANJ-I1 vs ANJ-I1",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.1a",
+      "name": "400 rejected: guests=0",
+      "pass": true,
+      "detail": "guests must be an integer between 1 and 12",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.1b",
+      "name": "400 rejected: guests=-3",
+      "pass": true,
+      "detail": "guests must be an integer between 1 and 12",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.1c",
+      "name": "400 rejected: guests=13",
+      "pass": true,
+      "detail": "guests must be an integer between 1 and 12",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.1d",
+      "name": "400 rejected: guests=2.5 (non-integer)",
+      "pass": true,
+      "detail": "guests must be an integer between 1 and 12",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.1e",
+      "name": "400 rejected: guests=\"4\" (string)",
+      "pass": true,
+      "detail": "guests must be an integer between 1 and 12",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.1f",
+      "name": "400 rejected: guests missing",
+      "pass": true,
+      "detail": "guests must be an integer between 1 and 12",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.2a",
+      "name": "400 rejected: date in the past (IST)",
+      "pass": true,
+      "detail": "date must be today (IST) or later",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.2b",
+      "name": "400 rejected: date 2026-02-30 (unreal)",
+      "pass": true,
+      "detail": "date must be a real calendar date in YYYY-MM-DD format",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.2c",
+      "name": "400 rejected: date 2026-13-05 (bad month)",
+      "pass": true,
+      "detail": "date must be a real calendar date in YYYY-MM-DD format",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.2d",
+      "name": "400 rejected: date missing",
+      "pass": true,
+      "detail": "date must be a real calendar date in YYYY-MM-DD format",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.3a",
+      "name": "400 rejected: time 25:99",
+      "pass": true,
+      "detail": "time must be a valid HH:MM time (00:00-23:59)",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.3b",
+      "name": "400 rejected: time 9:00 (unpadded)",
+      "pass": true,
+      "detail": "time must be a valid HH:MM time (00:00-23:59)",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.3c",
+      "name": "400 rejected: time 14:00:00",
+      "pass": true,
+      "detail": "time must be a valid HH:MM time (00:00-23:59)",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.3d",
+      "name": "400 rejected: time missing",
+      "pass": true,
+      "detail": "time must be a valid HH:MM time (00:00-23:59)",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.4a",
+      "name": "400 rejected: unknown outlet \"mumbai\"",
+      "pass": true,
+      "detail": "locationId must be a known outlet",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.4b",
+      "name": "400 rejected: locationId missing",
+      "pass": true,
+      "detail": "locationId must be a known outlet",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.5a",
+      "name": "400 rejected: name missing",
+      "pass": true,
+      "detail": "name is required",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.5b",
+      "name": "400 rejected: name empty string",
+      "pass": true,
+      "detail": "name is required",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.6a",
+      "name": "boundary accepted: guests=8 (largest table), notes=500 chars",
+      "pass": true,
+      "detail": "HTTP 201 ",
+      "ms": 0
+    },
+    {
+      "group": "P2 Input Validation",
+      "id": "T2.6b",
+      "name": "today (IST) is accepted (not treated as past)",
+      "pass": true,
+      "detail": "HTTP 201 ",
+      "ms": 0
+    },
+    {
+      "group": "P3 Security (XSS / DoS)",
+      "id": "T3.1a",
+      "name": "XSS in name rejected at API layer",
+      "pass": true,
+      "detail": "HTTP 400 name must not contain < or > characters",
+      "ms": 0
+    },
+    {
+      "group": "P3 Security (XSS / DoS)",
+      "id": "T3.1b",
+      "name": "XSS in notes rejected at API layer",
+      "pass": true,
+      "detail": "HTTP 400 notes must not contain < or > characters",
+      "ms": 0
+    },
+    {
+      "group": "P3 Security (XSS / DoS)",
+      "id": "T3.1c",
+      "name": "XSS in email rejected at API layer",
+      "pass": true,
+      "detail": "HTTP 400 email must not contain < or > characters",
+      "ms": 0
+    },
+    {
+      "group": "P3 Security (XSS / DoS)",
+      "id": "T3.1d",
+      "name": "XSS in occasion rejected at API layer",
+      "pass": true,
+      "detail": "HTTP 400 occasion must not contain < or > characters",
+      "ms": 0
+    },
+    {
+      "group": "P3 Security (XSS / DoS)",
+      "id": "T3.1e",
+      "name": "XSS in phone rejected at API layer",
+      "pass": true,
+      "detail": "HTTP 400 phone must not contain < or > characters",
+      "ms": 0
+    },
+    {
+      "group": "P3 Security (XSS / DoS)",
+      "id": "T3.2",
+      "name": "notes 501 chars rejected",
+      "pass": true,
+      "detail": "HTTP 400",
+      "ms": 0
+    },
+    {
+      "group": "P3 Security (XSS / DoS)",
+      "id": "T3.3",
+      "name": "oversized payload rejected (413/400 or reset), nothing stored",
+      "pass": true,
+      "detail": "HTTP 0 (connection reset by server)",
+      "ms": 0
+    },
+    {
+      "group": "P3 Security (XSS / DoS)",
+      "id": "T3.4",
+      "name": "stored dataset contains no raw < > characters",
+      "pass": true,
+      "detail": "clean",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.0",
+      "name": "setup: create probe reservation",
+      "pass": true,
+      "detail": "BF-B8K8QK",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.1a",
+      "name": "PATCH status \"banana\" rejected",
+      "pass": true,
+      "detail": "HTTP 400 Invalid status. Allowed values: confirmed, seated, completed, cancelle",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.1b",
+      "name": "PATCH status \"\" rejected",
+      "pass": true,
+      "detail": "HTTP 400 Invalid status. Allowed values: confirmed, seated, completed, cancelle",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.1c",
+      "name": "PATCH status \"CONFIRMED-ish\" rejected",
+      "pass": true,
+      "detail": "HTTP 400 Invalid status. Allowed values: confirmed, seated, completed, cancelle",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.1d",
+      "name": "PATCH status \"delete * from reservations\" rejected",
+      "pass": true,
+      "detail": "HTTP 400 Invalid status. Allowed values: confirmed, seated, completed, cancelle",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.2a",
+      "name": "confirmed -> seated accepted",
+      "pass": true,
+      "detail": "HTTP 200",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.2b",
+      "name": "seatedAt timestamp recorded",
+      "pass": true,
+      "detail": "2026-10-18T04:52:41.252Z",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.2c",
+      "name": "seated -> completed accepted",
+      "pass": true,
+      "detail": "HTTP 200",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.2d",
+      "name": "completedAt timestamp recorded",
+      "pass": true,
+      "detail": "2026-10-18T04:52:41.254Z",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.3a",
+      "name": "revive completed -> confirmed rejected",
+      "pass": true,
+      "detail": "HTTP 400 Illegal transition: completed -> confirmed (terminal states cannot be ",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.3b",
+      "name": "revive completed -> seated rejected",
+      "pass": true,
+      "detail": "HTTP 400 Illegal transition: completed -> seated (terminal states cannot be rev",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.3c",
+      "name": "revive completed -> cancelled rejected",
+      "pass": true,
+      "detail": "HTTP 400 Illegal transition: completed -> cancelled (terminal states cannot be ",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.3d",
+      "name": "revive completed -> no-show rejected",
+      "pass": true,
+      "detail": "HTTP 400 Illegal transition: completed -> no-show (terminal states cannot be re",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.4a",
+      "name": "confirmed -> cancelled accepted",
+      "pass": true,
+      "detail": "HTTP 200",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.4b",
+      "name": "cancelledAt + cancelReason recorded",
+      "pass": true,
+      "detail": "\"Guest plans changed\"",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.4c",
+      "name": "cancelled -> confirmed (revive) rejected",
+      "pass": true,
+      "detail": "HTTP 400",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.4d",
+      "name": "confirmed -> no-show accepted (+noShowAt)",
+      "pass": true,
+      "detail": "HTTP 200",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.5a",
+      "name": "walk-in initial status=seated accepted",
+      "pass": true,
+      "detail": "HTTP 201 status=seated",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.5b",
+      "name": "walk-in seated -> completed accepted",
+      "pass": true,
+      "detail": "HTTP 200",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.6",
+      "name": "PATCH unknown code -> 404",
+      "pass": true,
+      "detail": "HTTP 404",
+      "ms": 0
+    },
+    {
+      "group": "P4 State Machine",
+      "id": "T4.7",
+      "name": "same-status no-op (confirmed -> confirmed) rejected",
+      "pass": true,
+      "detail": "HTTP 400",
+      "ms": 0
+    },
+    {
+      "group": "P5 Allocation & 409",
+      "id": "T5.1a",
+      "name": "exhaustion: exactly 7 successes (zone capacity), rest 409",
+      "pass": true,
+      "detail": "ok=7 409=2",
+      "ms": 0
+    },
+    {
+      "group": "P5 Allocation & 409",
+      "id": "T5.1b",
+      "name": "all allocated tables distinct",
+      "pass": true,
+      "detail": "ANJ-O3,ANJ-O4,ANJ-O5,ANJ-O6,ANJ-O7,ANJ-O8,ANJ-O9",
+      "ms": 0
+    },
+    {
+      "group": "P5 Allocation & 409",
+      "id": "T5.1c",
+      "name": "409 body carries a human reason",
+      "pass": true,
+      "detail": "No table available at Anjuna, North Goa for 4 guest(s) on 2026-10-27 19:00",
+      "ms": 0
+    },
+    {
+      "group": "P5 Allocation & 409",
+      "id": "T5.1d",
+      "name": "best-fit order: 4-seaters allocated before 6/8-seaters",
+      "pass": true,
+      "detail": "4-seater,4-seater,4-seater,4-seater,6-seater,8-seater,8-seater",
+      "ms": 0
+    },
+    {
+      "group": "P5 Allocation & 409",
+      "id": "T5.2",
+      "name": "seating=indoor allocates from indoor zone only",
+      "pass": true,
+      "detail": "ANJ-I4 zone=indoor",
+      "ms": 0
+    },
+    {
+      "group": "P5 Allocation & 409",
+      "id": "T5.3",
+      "name": "2 guests -> smallest table (2-seater)",
+      "pass": true,
+      "detail": "ANJ-I1 2-seater",
+      "ms": 0
+    },
+    {
+      "group": "P5 Allocation & 409",
+      "id": "T5.4a",
+      "name": "12 guests at a max-8-seater outlet -> 409 (no table fits)",
+      "pass": true,
+      "detail": "HTTP 409 No table available at Anjuna, North Goa for 12 guest(s) on 2",
+      "ms": 0
+    },
+    {
+      "group": "P5 Allocation & 409",
+      "id": "T5.5",
+      "name": "odd-minute time (20:07) accepted for walk-ins (HH:MM rule, not slot list)",
+      "pass": true,
+      "detail": "HTTP 201 ",
+      "ms": 0
+    },
+    {
+      "group": "P6 SSE Realtime",
+      "id": "T6.1",
+      "name": "SSE connected event received",
+      "pass": true,
+      "detail": "ok",
+      "ms": 0
+    },
+    {
+      "group": "P6 SSE Realtime",
+      "id": "T6.2",
+      "name": "POST triggers reservations:changed (action=created)",
+      "pass": true,
+      "detail": "ok",
+      "ms": 0
+    },
+    {
+      "group": "P6 SSE Realtime",
+      "id": "T6.3",
+      "name": "PATCH triggers reservations:changed (action=status_updated)",
+      "pass": true,
+      "detail": "ok",
+      "ms": 0
+    },
+    {
+      "group": "P6 SSE Realtime",
+      "id": "T6.4",
+      "name": "event payload list parity with GET",
+      "pass": true,
+      "detail": "event=1 get=1",
+      "ms": 0
+    },
+    {
+      "group": "P7 Persistence",
+      "id": "T7.1",
+      "name": "DB file valid JSON after churn",
+      "pass": true,
+      "detail": "",
+      "ms": 0
+    },
+    {
+      "group": "P7 Persistence",
+      "id": "T7.1b",
+      "name": "no .tmp residue",
+      "pass": true,
+      "detail": "",
+      "ms": 0
+    },
+    {
+      "group": "P7 Persistence",
+      "id": "T7.2a",
+      "name": "server survives corrupt DB (GET returns 200 + [])",
+      "pass": true,
+      "detail": "HTTP 200",
+      "ms": 0
+    },
+    {
+      "group": "P7 Persistence",
+      "id": "T7.2b",
+      "name": "corrupt file quarantined as .corrupt-* (data preserved)",
+      "pass": true,
+      "detail": "reservations.json.corrupt-1792299161377",
+      "ms": 0
+    },
+    {
+      "group": "P7 Persistence",
+      "id": "T7.3",
+      "name": "write after quarantine recreates clean DB",
+      "pass": true,
+      "detail": "HTTP 201",
+      "ms": 0
+    },
+    {
+      "group": "P8 IST Dates",
+      "id": "T8.1a",
+      "name": "date = yesterday(IST) rejected",
+      "pass": true,
+      "detail": "HTTP 400",
+      "ms": 0
+    },
+    {
+      "group": "P8 IST Dates",
+      "id": "T8.1b",
+      "name": "date = today(IST) accepted",
+      "pass": true,
+      "detail": "HTTP 201 ",
+      "ms": 0
+    },
+    {
+      "group": "P8 IST Dates",
+      "id": "T8.1c",
+      "name": "stored date matches today(IST) byte-for-byte",
+      "pass": true,
+      "detail": "2026-10-18 vs 2026-10-18",
+      "ms": 0
+    },
+    {
+      "group": "P8 IST Dates",
+      "id": "T8.2",
+      "name": "late-evening IST walk-in accepted for today",
+      "pass": true,
+      "detail": "HTTP 201",
+      "ms": 0
+    },
+    {
+      "group": "P8 IST Dates",
+      "id": "T8.3",
+      "name": "vite.config.js contains an IST-aware clock helper",
+      "pass": true,
+      "detail": "getTodayIST/offset marker found",
+      "ms": 0
+    },
+    {
+      "group": "P8 IST Dates",
+      "id": "T8.4",
+      "name": "vite.config.js: no raw UTC toISOString().split(\"T\") date idiom",
+      "pass": true,
+      "detail": "clean",
+      "ms": 0
+    },
+    {
+      "group": "P9 Reset Endpoint",
+      "id": "T9.1",
+      "name": "POST /api/v1/reservations/reset -> 200",
+      "pass": true,
+      "detail": "HTTP 200",
+      "ms": 0
+    },
+    {
+      "group": "P9 Reset Endpoint",
+      "id": "T9.2",
+      "name": "reset empties the dataset (was 3)",
+      "pass": true,
+      "detail": "now=0",
+      "ms": 0
+    },
+    {
+      "group": "P9 Reset Endpoint",
+      "id": "T9.3",
+      "name": "data file on disk is an empty array after reset",
+      "pass": true,
+      "detail": "len=0",
+      "ms": 0
+    },
+    {
+      "group": "P10 Static Audits",
+      "id": "S10.1a",
+      "name": "no prefilled value= on the password input",
+      "pass": true,
+      "detail": "clean",
+      "ms": 0
+    },
+    {
+      "group": "P10 Static Audits",
+      "id": "S10.1b",
+      "name": "no passcode literal rendered in manager.html",
+      "pass": true,
+      "detail": "clean",
+      "ms": 0
+    },
+    {
+      "group": "P10 Static Audits",
+      "id": "S10.2a",
+      "name": "escapeHtml() defined in booking.js",
+      "pass": true,
+      "detail": "found",
+      "ms": 0
+    },
+    {
+      "group": "P10 Static Audits",
+      "id": "S10.2b",
+      "name": "escapeHtml applied in render modules (manager/main/thermal)",
+      "pass": true,
+      "detail": "3/3 modules use it",
+      "ms": 0
+    },
+    {
+      "group": "P10 Static Audits",
+      "id": "S10.3a",
+      "name": "client booking.js has getTodayIST()",
+      "pass": true,
+      "detail": "found",
+      "ms": 0
+    },
+    {
+      "group": "P10 Static Audits",
+      "id": "S10.3b",
+      "name": "client: no toISOString().split(\"T\") UTC idiom left",
+      "pass": true,
+      "detail": "clean",
+      "ms": 0
+    },
+    {
+      "group": "P10 Static Audits",
+      "id": "S10.4a",
+      "name": "engine writes through a .tmp staging file",
+      "pass": true,
+      "detail": "found",
+      "ms": 0
+    },
+    {
+      "group": "P10 Static Audits",
+      "id": "S10.4b",
+      "name": "engine commits via rename (atomic)",
+      "pass": true,
+      "detail": "found",
+      "ms": 0
+    },
+    {
+      "group": "P10 Static Audits",
+      "id": "S10.4c",
+      "name": "no direct records-write bypassing the atomic path",
+      "pass": true,
+      "detail": "clean",
+      "ms": 0
+    },
+    {
+      "group": "P10 Static Audits",
+      "id": "S10.5",
+      "name": "floor canvas sorts reservations before .find() (clock fix)",
+      "pass": true,
+      "detail": "sort+find present in renderFloorCanvas",
+      "ms": 0
+    },
+    {
+      "group": "P10 Static Audits",
+      "id": "S10.6",
+      "name": "no fire-and-forget fetch with empty catch in booking.js",
+      "pass": true,
+      "detail": "clean",
+      "ms": 0
+    },
+    {
+      "group": "P10 Static Audits",
+      "id": "S10.7",
+      "name": "mutation functions gate on server result before local mirror",
+      "pass": true,
+      "detail": "result gate found",
+      "ms": 0
+    },
+    {
+      "group": "U Client Module (booking.js)",
+      "id": "U0",
+      "name": "booking.js imports under Node shims",
+      "pass": true,
+      "detail": "ok",
+      "ms": 0
+    },
+    {
+      "group": "U Client Module (booking.js)",
+      "id": "U1a",
+      "name": "escapeHtml neutralizes < >",
+      "pass": true,
+      "detail": "&lt;img src=x onerror=alert(1)&gt;",
+      "ms": 0
+    },
+    {
+      "group": "U Client Module (booking.js)",
+      "id": "U1b",
+      "name": "escapeHtml neutralizes quotes and raw brackets are gone",
+      "pass": true,
+      "detail": "&quot;&gt;&lt;svg onload=alert(2)&gt;",
+      "ms": 0
+    },
+    {
+      "group": "U Client Module (booking.js)",
+      "id": "U1c",
+      "name": "escapeHtml(null) -> empty string",
+      "pass": true,
+      "detail": "\"\"",
+      "ms": 0
+    },
+    {
+      "group": "U Client Module (booking.js)",
+      "id": "U2",
+      "name": "getTodayIST() matches +5:30 reference clock",
+      "pass": true,
+      "detail": "2026-10-18 vs 2026-10-18",
+      "ms": 0
+    },
+    {
+      "group": "U Client Module (booking.js)",
+      "id": "U3a",
+      "name": "server unreachable -> {success:false} with message",
+      "pass": true,
+      "detail": "Network error — the server could not be reached. Nothing was changed.",
+      "ms": 0
+    },
+    {
+      "group": "U Client Module (booking.js)",
+      "id": "U3b",
+      "name": "local mirror NOT polluted on failure (no ghost confirmation)",
+      "pass": true,
+      "detail": "byte-identical",
+      "ms": 0
+    },
+    {
+      "group": "U Client Module (booking.js)",
+      "id": "U4a",
+      "name": "client surfaces 409 as {success:false}",
+      "pass": true,
+      "detail": "No table available at Anjuna, North Goa for 4 guest(s) on 2026-11-02 19:00",
+      "ms": 0
+    },
+    {
+      "group": "U Client Module (booking.js)",
+      "id": "U4b",
+      "name": "rejected booking never enters the local mirror (no ghost record)",
+      "pass": true,
+      "detail": "mirror len=7 (no U4 Overflow present)",
+      "ms": 0
+    },
+    {
+      "group": "U Client Module (booking.js)",
+      "id": "U5a",
+      "name": "success -> {success:true} + server reservation",
+      "pass": true,
+      "detail": "ANJ-I8",
+      "ms": 0
+    },
+    {
+      "group": "U Client Module (booking.js)",
+      "id": "U5b",
+      "name": "local mirror now equals server list",
+      "pass": true,
+      "detail": "len=8",
+      "ms": 0
+    },
+    {
+      "group": "U Client Module (booking.js)",
+      "id": "U6a",
+      "name": "lookup/cancel with last4 on empty-phone booking -> rejected",
+      "pass": true,
+      "detail": "Phone verification failed: this booking has no phone number on file.",
+      "ms": 0
+    },
+    {
+      "group": "U Client Module (booking.js)",
+      "id": "U6b",
+      "name": "wrong last-4 digits -> rejected",
+      "pass": true,
+      "detail": "Phone verification failed: last 4 digits do not match this booking.",
+      "ms": 0
+    },
+    {
+      "group": "U Client Module (booking.js)",
+      "id": "U6c",
+      "name": "correct last-4 -> cancel accepted",
+      "pass": true,
+      "detail": "ok",
+      "ms": 0
+    },
+    {
+      "group": "U Client Module (booking.js)",
+      "id": "U7a",
+      "name": "client PATCH illegal transition -> {success:false}",
+      "pass": true,
+      "detail": "Illegal transition: cancelled -> confirmed (terminal states cannot be revived)",
+      "ms": 0
+    },
+    {
+      "group": "U Client Module (booking.js)",
+      "id": "U7b",
+      "name": "mirror unchanged after illegal attempt",
+      "pass": true,
+      "detail": "stable",
+      "ms": 0
+    }
+  ]
+}

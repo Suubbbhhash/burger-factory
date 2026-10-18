@@ -1,0 +1,18 @@
+{
+  "project-chat-logger": {
+    "PostInvocation": [
+      {
+        "type": "command",
+        "command": "node -e \"try{require('../scripts/sync_chat_log.cjs')}catch(e){require('./scripts/sync_chat_log.cjs')}\"",
+        "timeout": 15
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node -e \"try{require('../scripts/sync_chat_log.cjs')}catch(e){require('./scripts/sync_chat_log.cjs')}\"",
+        "timeout": 15
+      }
+    ]
+  }
+}

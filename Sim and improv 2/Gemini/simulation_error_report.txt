@@ -1,0 +1,46 @@
+================================================================================
+THE BURGER FACTORY — REAL-LIFE MULTI-DAY & CONCURRENT SIMULATION REPORT
+================================================================================
+Generated At        : 2026-10-18T04:50:40.370Z
+Target Endpoint     : http://localhost:3000
+Simulated Horizon   : 7 Full Service Days × 7 Outlets (110 Physical Tables, 500 Seats)
+Total HTTP Requests : 2335
+SSE Events Captured : 1544
+Latency Metrics     : p50 = 119.34 ms | p95 = 153.34 ms | p99 = 1032.50 ms
+Chaos Attacks Blocked: 10/10
+Invariants Verified : 10/10
+Overall Verdict     : PASS (ZERO ERRORS — PRODUCTION READY)
+================================================================================
+
+1. EXECUTIVE SIMULATION TELEMETRY
+--------------------------------------------------------------------------------
+- Online Bookings Requested   : 674
+- Online Bookings Confirmed   : 630
+- Rejected (No Table / Full)  : 44
+- Walk-In Parties Seated      : 111
+- Customer Self-Cancellations : 83
+- Host Seated Transitions     : 329
+- Host Completed Turns        : 316
+- Host No-Shows Marked        : 73
+- Chaos & Security Payloads   : 10/10 Blocked
+- Double-Booking Collisions   : 0
+
+2. 7-DAY SERVICE BREAKDOWN ACROSS ALL 7 OUTLETS
+--------------------------------------------------------------------------------
+DATE         | DAY TYPE | BOOKED | WALK-INS | SEATED | COMPLETED | CANCELLED | NO-SHOW
+--------------------------------------------------------------------------------
+2026-10-18 | WEEKEND  |    101 |       18 |     58 |        45 |        14 |      17
+2026-10-19 | WEEKDAY  |     80 |       16 |     43 |        43 |         4 |       9
+2026-10-20 | WEEKDAY  |     77 |       14 |     37 |        37 |        12 |       5
+2026-10-21 | WEEKDAY  |     73 |       12 |     40 |        40 |        11 |       7
+2026-10-22 | WEEKDAY  |     81 |       13 |     41 |        41 |        15 |       8
+2026-10-23 | WEEKEND  |    105 |       20 |     49 |        49 |        11 |      19
+2026-10-24 | WEEKEND  |    106 |       18 |     61 |        61 |        16 |       8
+
+3. ERRORS & VULNERABILITIES DISCOVERED (0 TOTAL)
+================================================================================
+Zero errors! All 10 chaos/security tests and all 10 concurrency, capacity, state-machine, timezone, and XSS invariants passed.
+
+4. WARNINGS & CODE HYGIENE NOTES (0 TOTAL)
+================================================================================
+Zero warnings.

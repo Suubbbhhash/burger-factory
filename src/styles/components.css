@@ -1,0 +1,447 @@
+/* ============================================
+   THE BURGER FACTORY — COMPONENTS
+   ============================================ */
+
+/* ----- Buttons with Tactile Hard Offset Press ----- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding: 0.65rem 1.4rem;
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  font-weight: 700;
+  text-align: center;
+  border: var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hard);
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  white-space: nowrap;
+}
+
+.btn:hover {
+  transform: translate(2px, 2px);
+  box-shadow: var(--shadow-hard-xs);
+}
+
+.btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--shadow-hard-xs);
+}
+
+.btn-mustard {
+  background-color: var(--mustard);
+  color: var(--ink);
+}
+
+.btn-ketchup {
+  background-color: var(--ketchup);
+  color: #FFFFFF;
+}
+
+.btn-sea {
+  background-color: var(--sea);
+  color: #FFFFFF;
+}
+
+.btn-paper {
+  background-color: var(--paper-surface);
+  color: var(--ink);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--ink);
+}
+
+.btn-sm {
+  min-height: 36px;
+  padding: 0.35rem 0.85rem;
+  font-size: var(--step--1);
+  box-shadow: var(--shadow-hard-xs);
+}
+
+.btn-lg {
+  min-height: 54px;
+  padding: 0.85rem 1.8rem;
+  font-size: var(--step-1);
+}
+
+.btn-full {
+  width: 100%;
+}
+
+/* ----- Indian Veg & Non-Veg Marker Badges ----- */
+.diet-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.diet-badge.veg {
+  border: 1.5px solid var(--leaf);
+}
+.diet-badge.veg::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--leaf);
+}
+
+.diet-badge.non-veg {
+  border: 1.5px solid var(--ketchup);
+}
+.diet-badge.non-veg::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--ketchup);
+}
+
+/* ----- Printed-Menu Row with Dotted Leaders ----- */
+.menu-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.menu-name {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.menu-leader {
+  flex: 1;
+  border-bottom: 2px dotted var(--ink-soft);
+  transform: translateY(-4px);
+  opacity: 0.5;
+}
+
+.menu-price {
+  font-family: var(--font-mono);
+  font-size: var(--step-1);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* ----- Chips & Pill Selectors ----- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  font-family: var(--font-body);
+  font-size: var(--step--1);
+  font-weight: 600;
+  background: var(--paper-card);
+  border: var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hard-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.chip:hover {
+  background: var(--paper-deep);
+  transform: translate(1px, 1px);
+}
+
+.chip.active {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+  box-shadow: 2px 2px 0 var(--mustard);
+}
+
+/* Time Slot Chips */
+.chip-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 0.5rem;
+  /* No fixed min-width — grid handles sizing */
+  min-width: 0;
+  background: var(--paper-surface);
+  border: var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hard-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.chip-slot .slot-time {
+  font-family: var(--font-mono);
+  font-size: var(--step-0);
+  font-weight: 700;
+}
+
+.chip-slot .slot-hint {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+.chip-slot.available .slot-hint { color: var(--leaf); }
+.chip-slot.last_tables .slot-hint { color: var(--ketchup); }
+
+.chip-slot.active {
+  background: var(--mustard);
+  color: var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  transform: translate(1px, 1px);
+}
+
+.chip-slot.full {
+  opacity: 0.35;
+  background: var(--paper-deep);
+  cursor: not-allowed;
+  box-shadow: none;
+  text-decoration: line-through;
+}
+
+/* ----- Stepper for Party Size ----- */
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hard-xs);
+  background: var(--paper-surface);
+  overflow: hidden;
+}
+
+.stepper-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: var(--paper-deep);
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast);
+}
+
+.stepper-btn:hover {
+  background: var(--mustard);
+}
+
+.stepper-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--paper-deep);
+}
+
+.stepper-value {
+  min-width: 60px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--step-1);
+  font-weight: 700;
+  padding: 0 0.5rem;
+}
+
+/* ----- Thermal Kitchen Voucher Receipt Modal ----- */
+.thermal-ticket-wrapper {
+  max-width: 440px;
+  margin: 0 auto;
+  position: relative;
+  filter: drop-shadow(0 15px 30px rgba(0,0,0,0.15));
+}
+
+.thermal-ticket {
+  background: var(--parchment);
+  color: var(--parchment-ink);
+  border: 2px solid var(--ink);
+  padding: 2rem 1.75rem;
+  position: relative;
+  font-family: var(--font-mono);
+}
+
+/* Perforated Notched Circles */
+.thermal-ticket::before,
+.thermal-ticket::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  background-color: rgba(0,0,0,0.7); /* Modal backdrop color match */
+  border-radius: 50%;
+  transform: translateY(-50%);
+  border: 2px solid var(--ink);
+}
+
+.thermal-ticket::before { left: -14px; }
+.thermal-ticket::after { right: -14px; }
+
+.ticket-header {
+  text-align: center;
+  border-bottom: 2px dashed rgba(28, 23, 19, 0.4);
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.ticket-kicker {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: var(--ink-soft);
+  display: block;
+}
+
+.ticket-outlet {
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0.25rem 0;
+  color: var(--ketchup);
+}
+
+.ticket-meta {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.ticket-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.ticket-field dt {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.ticket-field dd {
+  font-size: var(--step-0);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.ticket-code-banner {
+  background: var(--ink);
+  color: var(--paper);
+  text-align: center;
+  padding: 0.85rem;
+  border-radius: var(--radius);
+  margin: 1.25rem 0;
+}
+
+.ticket-code-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--mustard);
+  text-transform: uppercase;
+  display: block;
+}
+
+.ticket-code-val {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.ticket-perforation {
+  border-bottom: 2px dashed rgba(28, 23, 19, 0.4);
+  margin: 1.5rem 0;
+}
+
+.ticket-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+/* ----- Toast Notification ----- */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.25rem;
+  background: var(--paper-surface);
+  color: var(--ink);
+  border: var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hard);
+  font-size: var(--step--1);
+  font-weight: 600;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all var(--transition-base);
+}
+
+.toast-show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.toast.toast-success { border-left: 6px solid var(--leaf); }
+.toast.toast-error { border-left: 6px solid var(--ketchup); }
+.toast.toast-warning { border-left: 6px solid var(--mustard); }
+.toast.toast-info { border-left: 6px solid var(--sea); }
+
+/* ----- Dialog & Modal ----- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 16, 14, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-overlay.open {
+  display: flex;
+}

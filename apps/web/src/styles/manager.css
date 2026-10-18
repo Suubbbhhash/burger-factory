@@ -1,0 +1,706 @@
+/* ============================================
+   THE BURGER FACTORY — STAFF PORTAL & HOTEL DAY SHEET PRINT STYLES
+   Mobile Phone Card Layout + A4 Hospitality Day Sheet (@media print)
+   ============================================ */
+
+.manager-body {
+  background-color: var(--paper-deep);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+.print-only-daysheet {
+  display: none;
+}
+
+.mgr-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: var(--paper-surface);
+  border-bottom: var(--line-strong);
+  padding: 0.65rem 0;
+}
+
+.mgr-nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-md);
+  max-width: 100%;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.mgr-brand-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.mgr-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.mgr-clock {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.mgr-badge {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius);
+  background: var(--mustard);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+}
+
+.mgr-live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--leaf-tint);
+  color: var(--leaf);
+  border: 1px solid var(--leaf);
+}
+
+.mgr-live-indicator.live::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--leaf);
+  animation: pulse 1.5s infinite;
+}
+
+.mgr-live-indicator.reconnecting {
+  background: rgba(214, 59, 39, 0.1);
+  color: var(--ketchup);
+  border-color: var(--ketchup);
+}
+
+.mgr-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: calc(100vh - 60px);
+}
+
+.mgr-sidebar {
+  background: var(--paper-surface);
+  border-right: var(--line);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.mgr-sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sidebar-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 0.4rem;
+}
+
+.mgr-select, .mgr-date-input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  background: var(--paper-card);
+  border: var(--line);
+  border-radius: var(--radius);
+  font-size: var(--step--1);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.status-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.status-filter-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.85rem;
+  background: var(--paper-card);
+  border: var(--line-soft);
+  border-radius: var(--radius);
+  font-size: var(--step--1);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.status-filter-btn:hover {
+  background: var(--paper-deep);
+}
+
+.status-filter-btn.active {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+  box-shadow: 2px 2px 0 var(--mustard);
+}
+
+.mgr-content {
+  padding: var(--space-md);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.mgr-stats-strip {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.75rem;
+}
+
+.mgr-stat-box {
+  background: var(--paper-surface);
+  border: var(--line);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  box-shadow: var(--shadow-hard-xs);
+}
+
+.mgr-stat-box .stat-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  display: block;
+}
+
+.mgr-stat-box .stat-val {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.arriving-soon-lane {
+  background: var(--paper-surface);
+  border: var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-sm) var(--space-md);
+  box-shadow: var(--shadow-hard-xs);
+}
+
+.lane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.lane-chips {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.arriving-card {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--paper-card);
+  border: var(--line);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.85rem;
+  box-shadow: var(--shadow-hard-xs);
+}
+
+.arriving-time {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--ketchup);
+}
+
+.mgr-floor-section {
+  background: var(--paper-surface);
+  border: var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.floor-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.floor-legend {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid var(--ink);
+}
+
+.floor-grid-canvas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.85rem;
+  padding: 1rem;
+  background: var(--paper-deep);
+  border: var(--line);
+  border-radius: var(--radius);
+  min-height: 280px;
+}
+
+.floor-table-card {
+  background: var(--paper-surface);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100px;
+  box-shadow: var(--shadow-hard-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.floor-table-card:hover {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.floor-table-card.shape-round {
+  border-radius: 50%;
+  aspect-ratio: 1/1;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+}
+
+.floor-table-card.available {
+  border-color: var(--leaf);
+  background: var(--paper-surface);
+}
+.floor-table-card.available .table-status-tag {
+  color: var(--leaf);
+}
+
+.floor-table-card.reserved {
+  border-color: var(--mustard);
+  background: #FFFDF7;
+}
+.floor-table-card.reserved .table-status-tag {
+  color: var(--mustard);
+}
+
+.floor-table-card.occupied {
+  border-color: var(--sea);
+  background: #F0F7F6;
+}
+.floor-table-card.occupied .table-status-tag {
+  color: var(--sea);
+}
+
+.floor-table-card.overtime {
+  border-color: var(--ketchup);
+  background: #FFF5F4;
+  animation: overtimePulse 2s infinite;
+}
+
+@keyframes overtimePulse {
+  0%, 100% { border-color: var(--ketchup); }
+  50% { border-color: var(--ketchup-dark); box-shadow: 0 0 10px rgba(214, 59, 39, 0.4); }
+}
+
+.table-code {
+  font-family: var(--font-mono);
+  font-size: var(--step-0);
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.table-capacity {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.table-status-tag {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.table-guest-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.table-turn-timer {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--sea);
+}
+
+.table-turn-timer.warning {
+  color: var(--ketchup);
+  font-weight: 800;
+}
+
+.mgr-table-section {
+  background: var(--paper-surface);
+  border: var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.mgr-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+  gap: 1rem;
+}
+
+.mgr-search-input {
+  padding: 0.55rem 0.85rem;
+  background: var(--paper-card);
+  border: var(--line);
+  border-radius: var(--radius);
+  font-size: var(--step--1);
+  min-width: 260px;
+}
+
+.mgr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--step--1);
+}
+
+.mgr-table th {
+  background: var(--paper-deep);
+  border-bottom: var(--line-strong);
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mgr-table td {
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid rgba(28, 23, 19, 0.1);
+  vertical-align: middle;
+}
+
+.mgr-table tr:hover {
+  background: var(--paper-card);
+}
+
+.table-action-group {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--ink);
+  text-transform: uppercase;
+}
+
+.status-pill.confirmed { background: var(--mustard); color: var(--ink); }
+.status-pill.seated { background: var(--sea); color: #FFFFFF; }
+.status-pill.completed { background: var(--paper-deep); color: var(--ink-soft); }
+.status-pill.cancelled { background: var(--ketchup); color: #FFFFFF; }
+.status-pill.no-show { background: #E0E0E0; color: #555555; }
+
+@media (max-width: 900px) {
+  .mgr-layout { grid-template-columns: 1fr; }
+  .mgr-stats-strip { grid-template-columns: repeat(3, 1fr); }
+  .mgr-sidebar { border-right: none; border-bottom: var(--line); }
+}
+
+@media (max-width: 768px) {
+  .mgr-nav-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+    padding: 0 1rem;
+  }
+
+  .mgr-brand-group, .mgr-nav-actions {
+    justify-content: space-between;
+  }
+
+  .mgr-stats-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .status-filters {
+    flex-direction: row;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+
+  .status-filter-btn {
+    flex-shrink: 0;
+    gap: 0.5rem;
+  }
+
+  .mgr-table-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mgr-search-input {
+    min-width: 0;
+    width: 100%;
+    font-size: 16px;
+  }
+
+  .mgr-table thead {
+    display: none;
+  }
+
+  .mgr-table, .mgr-table tbody, .mgr-table tr, .mgr-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .mgr-table tr {
+    border: var(--line);
+    border-radius: var(--radius);
+    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    background: var(--paper-card);
+    box-shadow: var(--shadow-hard-xs);
+  }
+
+  .mgr-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0.5rem;
+    border-bottom: 1px dashed rgba(28, 23, 19, 0.12);
+    text-align: right;
+  }
+
+  .mgr-table td:last-child {
+    border-bottom: none;
+    padding-top: 0.65rem;
+  }
+
+  .mgr-table td::before {
+    content: attr(data-label);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    text-align: left;
+  }
+
+  .table-action-group {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* ==========================================================================
+   HOTEL-GRADE PRINTABLE DAY SHEET STYLES (@media print)
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  body, .manager-body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    font-family: 'DM Sans', Arial, sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.35;
+  }
+
+  .screen-only-wrapper,
+  .modal-overlay,
+  .toast-container {
+    display: none !important;
+  }
+
+  .print-only-daysheet {
+    display: block !important;
+    width: 100%;
+  }
+
+  .ds-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #000;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+
+  .ds-kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  .ds-title {
+    font-size: 15pt;
+    font-weight: 800;
+    margin: 2px 0;
+    color: #000;
+  }
+
+  .ds-subtitle {
+    font-size: 8.5pt;
+    color: #333;
+  }
+
+  .ds-meta-box {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+    text-align: right;
+    line-height: 1.5;
+  }
+
+  .ds-summary-table,
+  .ds-manifest-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 12px;
+  }
+
+  .ds-summary-table th,
+  .ds-summary-table td,
+  .ds-manifest-table th,
+  .ds-manifest-table td {
+    border: 1px solid #000;
+    padding: 4px 6px;
+    text-align: left;
+    vertical-align: top;
+    font-size: 8.5pt;
+  }
+
+  .ds-summary-table th,
+  .ds-manifest-table th {
+    background: #EFEFEF !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7.5pt;
+    font-weight: 800;
+  }
+
+  .ds-summary-table td {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10pt;
+    font-weight: 800;
+    text-align: center;
+  }
+
+  .ds-section-heading {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5pt;
+    font-weight: 800;
+    background: #000 !important;
+    color: #FFF !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    padding: 3px 6px;
+    margin-bottom: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  .ds-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .ds-row-cancelled td {
+    text-decoration: line-through;
+    color: #666;
+  }
+
+  .ds-empty-box {
+    border: 1px solid #000;
+    padding: 6px 8px;
+    font-size: 8.5pt;
+    margin-bottom: 12px;
+  }
+
+  .ds-footer {
+    margin-top: 14px;
+    padding-top: 8px;
+    border-top: 1.5px solid #000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+  }
+}

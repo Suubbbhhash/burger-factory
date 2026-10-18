@@ -1,0 +1,85 @@
+================================================================================
+THE BURGER FACTORY — REAL-LIFE MULTI-DAY & CONCURRENT SIMULATION REPORT
+================================================================================
+Generated At        : 2026-10-17T13:42:55.763Z
+Target Endpoint     : http://localhost:3000
+Simulated Horizon   : 7 Full Service Days × 7 Outlets (104 Physical Tables)
+Total HTTP Requests : 2352
+SSE Events Captured : 1580
+Latency Metrics     : p50 = 13.38 ms | p95 = 39.12 ms | p99 = 163.00 ms
+Overall Verdict     : FAIL (5 ERRORS DISCOVERED — SEE SECTION 3)
+================================================================================
+
+1. EXECUTIVE SIMULATION TELEMETRY
+--------------------------------------------------------------------------------
+- Online Bookings Requested   : 683
+- Online Bookings Confirmed   : 668
+- Rejected (No Table / Full)  : 15
+- Walk-In Parties Seated      : 111
+- Customer Self-Cancellations : 83
+- Host Seated Transitions     : 327
+- Host Completed Turns        : 318
+- Host No-Shows Marked        : 68
+- Chaos & Security Payloads   : 5
+- Double-Booking Collisions   : 301
+
+2. 7-DAY SERVICE BREAKDOWN ACROSS ALL 7 OUTLETS
+--------------------------------------------------------------------------------
+DATE         | DAY TYPE | BOOKED | WALK-INS | SEATED | COMPLETED | CANCELLED | NO-SHOW
+--------------------------------------------------------------------------------
+2026-10-17 | WEEKEND  |     94 |       17 |     62 |        53 |         7 |      13
+2026-10-18 | WEEKEND  |    113 |       20 |     54 |        54 |        13 |      18
+2026-10-19 | WEEKDAY  |     84 |       13 |     38 |        38 |        15 |       8
+2026-10-20 | WEEKDAY  |     75 |       12 |     41 |        41 |        11 |       5
+2026-10-21 | WEEKDAY  |     84 |       14 |     38 |        38 |        13 |       6
+2026-10-22 | WEEKDAY  |     83 |       14 |     44 |        44 |         9 |       8
+2026-10-23 | WEEKEND  |    110 |       21 |     50 |        50 |        15 |      10
+
+3. ERRORS & VULNERABILITIES DISCOVERED (5 TOTAL)
+================================================================================
+[ERROR #1] [HIGH] [ERR-VAL-001] (INPUT_VALIDATION)
+--------------------------------------------------------------------------------
+Summary     : Backend accepted a reservation with negative guest count (guests: -5)
+Diagnostic  :
+POST /api/v1/reservations returned HTTP 201 for payload with guests: -5.
+How to Fix  : Add server-side validation in vite.config.js to reject reservations where !Number.isInteger(guests) || guests < 1 || guests > 12.
+
+[ERROR #2] [HIGH] [ERR-CAP-001] (CAPACITY_ENFORCEMENT)
+--------------------------------------------------------------------------------
+Summary     : Backend accepted 999 guests onto 2-seater table ANJ-I1 without capacity verification
+Diagnostic  :
+POST /api/v1/reservations returned HTTP 201 when assigning 999 guests to 2-seater table ANJ-I1.
+How to Fix  : Enforce server-side table lookup and capacity >= guests check inside POST /api/v1/reservations.
+
+[ERROR #3] [MEDIUM] [ERR-VAL-002] (TEMPORAL_VALIDATION)
+--------------------------------------------------------------------------------
+Summary     : Backend accepted reservation for past year (1999-01-01) and impossible clock time (25:99)
+Diagnostic  :
+POST /api/v1/reservations returned HTTP 201 for date="1999-01-01", time="25:99".
+How to Fix  : Validate date >= today and time in TIME_SLOTS on the server before writing to reservations.json.
+
+[ERROR #4] [CRITICAL] [ERR-SEC-001] (SECURITY_XSS)
+--------------------------------------------------------------------------------
+Summary     : Stored XSS vulnerability: raw HTML/script tags accepted in guest name/notes and rendered via innerHTML
+Diagnostic  :
+POST /api/v1/reservations stored `<img src=x onerror=alert(1)>` verbatim, and manager.js / main.js inject `r.name` and `r.notes` directly into `innerHTML` without HTML escaping.
+How to Fix  : Strip `<` and `>` characters on the server and add an `escapeHtml()` helper in main.js, manager.js, and thermalTicket.js.
+
+[ERROR #5] [CRITICAL] [ERR-CONC-001] (CONCURRENCY_RACE_CONDITION)
+--------------------------------------------------------------------------------
+Summary     : Detected 301 overlapping double-bookings on the same physical table within a 90-minute window
+Diagnostic  :
+Sample collisions:
+  - [ANJUNA | 2026-10-18 | Table ANJ-O3]: BF-FZHG3Q (Stampede Diner #1 @ 19:30, confirmed) OVERLAPS WITH BF-R5DGDA (Stampede Diner #2 @ 19:30, confirmed)
+  - [ANJUNA | 2026-10-18 | Table ANJ-O3]: BF-FZHG3Q (Stampede Diner #1 @ 19:30, confirmed) OVERLAPS WITH BF-MFK6D2 (Stampede Diner #4 @ 19:30, confirmed)
+  - [ANJUNA | 2026-10-18 | Table ANJ-O3]: BF-FZHG3Q (Stampede Diner #1 @ 19:30, confirmed) OVERLAPS WITH BF-RH86LE (Stampede Diner #3 @ 19:30, confirmed)
+  - [ANJUNA | 2026-10-18 | Table ANJ-O3]: BF-FZHG3Q (Stampede Diner #1 @ 19:30, confirmed) OVERLAPS WITH BF-H89FW6 (Stampede Diner #5 @ 19:30, confirmed)
+  - [ANJUNA | 2026-10-18 | Table ANJ-O3]: BF-FZHG3Q (Stampede Diner #1 @ 19:30, confirmed) OVERLAPS WITH BF-GV8U55 (Stampede Diner #6 @ 19:30, confirmed)
+  - [ANJUNA | 2026-10-18 | Table ANJ-O3]: BF-FZHG3Q (Stampede Diner #1 @ 19:30, confirmed) OVERLAPS WITH BF-X47SXZ (Stampede Diner #7 @ 19:30, confirmed)
+  - [ANJUNA | 2026-10-18 | Table ANJ-O3]: BF-FZHG3Q (Stampede Diner #1 @ 19:30, confirmed) OVERLAPS WITH BF-WNCDRQ (Stampede Diner #8 @ 19:30, confirmed)
+  - [ANJUNA | 2026-10-18 | Table ANJ-O3]: BF-FZHG3Q (Stampede Diner #1 @ 19:30, confirmed) OVERLAPS WITH BF-P8KA79 (Stampede Diner #9 @ 19:30, confirmed)
+How to Fix  : Move table availability & collision checking into vite.config.js POST /api/v1/reservations behind a serialized request queue so concurrent requests never allocate the same table.
+
+4. WARNINGS & CODE HYGIENE NOTES (0 TOTAL)
+================================================================================
+Zero warnings.

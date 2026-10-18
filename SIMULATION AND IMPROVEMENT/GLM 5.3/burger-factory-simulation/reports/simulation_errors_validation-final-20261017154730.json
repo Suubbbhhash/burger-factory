@@ -1,0 +1,905 @@
+{
+  "runId": "validation-final-20261017154730",
+  "seed": "BF-7A2C9K",
+  "configEcho": {
+    "target": "http://127.0.0.1:3100",
+    "days": 3,
+    "acceleration": 720,
+    "chaos": "standard"
+  },
+  "errors": [
+    {
+      "id": "ERR-0001",
+      "category": "RACE",
+      "signature": "DBL-BOOK",
+      "actor": "CHAOS",
+      "message": "race pair: BOTH POSTs accepted — BF-YFL4UL and BF-EMH5MK now hold the SAME table VAG-I4 at 13:30. Server performed no overlap check.",
+      "atVirt": "2026-10-17T13:19:18.480+05:30"
+    },
+    {
+      "id": "ERR-0002",
+      "category": "RACE",
+      "signature": "DBL-BOOK",
+      "actor": "CHAOS",
+      "message": "race pair: BOTH POSTs accepted — BF-NWXLZA and BF-F4FAS2 now hold the SAME table NER-I3 at 13:00. Server performed no overlap check.",
+      "atVirt": "2026-10-17T13:36:18.000+05:30"
+    },
+    {
+      "id": "ERR-0003",
+      "category": "DATA",
+      "signature": "DBL-BOOK",
+      "actor": "AUDIT",
+      "message": "table nerul|2026-10-18|NER-I3 double-booked: BF-NWXLZA (13:00, confirmed) overlaps BF-F4FAS2 (13:00, confirmed)",
+      "atVirt": "2026-10-17T17:28:06.240+05:30"
+    },
+    {
+      "id": "ERR-0004",
+      "category": "VALIDATION",
+      "signature": "—",
+      "actor": "AUDIT",
+      "message": "record BF-GU73QF time 25:99 is outside the published slot grid (and is not a walk-in)",
+      "atVirt": "2026-10-17T17:28:06.960+05:30"
+    },
+    {
+      "id": "ERR-0005",
+      "category": "VALIDATION",
+      "signature": "—",
+      "actor": "AUDIT",
+      "message": "record BF-A6EC4Y time 03:00 is outside the published slot grid (and is not a walk-in)",
+      "atVirt": "2026-10-17T17:28:06.960+05:30"
+    },
+    {
+      "id": "ERR-0006",
+      "category": "RACE",
+      "signature": "DBL-BOOK",
+      "actor": "CHAOS",
+      "message": "race pair: BOTH POSTs accepted — BF-GSCZFD and BF-BMLF7K now hold the SAME table ANJ-I5 at 20:30. Server performed no overlap check.",
+      "atVirt": "2026-10-17T18:59:11.760+05:30"
+    },
+    {
+      "id": "ERR-0007",
+      "category": "RACE",
+      "signature": "DBL-BOOK",
+      "actor": "CHAOS",
+      "message": "race pair: BOTH POSTs accepted — BF-4YLKVL and BF-WUUMZN now hold the SAME table DEL-I4 at 13:30. Server performed no overlap check.",
+      "atVirt": "2026-10-17T22:22:59.520+05:30"
+    },
+    {
+      "id": "ERR-0008",
+      "category": "DATA",
+      "signature": "DBL-BOOK",
+      "actor": "AUDIT",
+      "message": "table delhi|2026-10-18|DEL-I4 double-booked: BF-4YLKVL (13:30, confirmed) overlaps BF-WUUMZN (13:30, confirmed)",
+      "atVirt": "2026-10-18T04:00:38.880+05:30"
+    },
+    {
+      "id": "ERR-0009",
+      "category": "RACE",
+      "signature": "DBL-BOOK",
+      "actor": "CHAOS",
+      "message": "race pair: BOTH POSTs accepted — BF-ZM4BHA and BF-LVMW5N now hold the SAME table ANJ-I3 at 20:00. Server performed no overlap check.",
+      "atVirt": "2026-10-18T10:04:39.360+05:30"
+    },
+    {
+      "id": "ERR-0010",
+      "category": "RACE",
+      "signature": "DBL-BOOK",
+      "actor": "CHAOS",
+      "message": "race pair: BOTH POSTs accepted — BF-AMH32U and BF-DYFQGH now hold the SAME table ANJ-I4 at 15:00. Server performed no overlap check.",
+      "atVirt": "2026-10-18T12:23:18.960+05:30"
+    },
+    {
+      "id": "ERR-0011",
+      "category": "RACE",
+      "signature": "DBL-BOOK",
+      "actor": "CHAOS",
+      "message": "race pair: BOTH POSTs accepted — BF-A9CVW5 and BF-2XQJV5 now hold the SAME table ANJ-I2 at 20:30. Server performed no overlap check.",
+      "atVirt": "2026-10-18T15:57:02.880+05:30"
+    },
+    {
+      "id": "ERR-0012",
+      "category": "DATA",
+      "signature": "ILLEGAL-TR",
+      "actor": "CHAOS",
+      "message": "server ACCEPTED illegal transition completed -> confirmed on BF-3BRAYF. PATCH has no state machine (finding A4-5).",
+      "atVirt": "2026-10-18T16:55:48.000+05:30"
+    },
+    {
+      "id": "ERR-0013",
+      "category": "DATA",
+      "signature": "DBL-BOOK",
+      "actor": "AUDIT",
+      "message": "table anjuna|2026-10-19|ANJ-I2 double-booked: BF-A9CVW5 (20:30, confirmed) overlaps BF-2XQJV5 (20:30, confirmed)",
+      "atVirt": "2026-10-18T17:20:07.440+05:30"
+    },
+    {
+      "id": "ERR-0014",
+      "category": "DATA",
+      "signature": "DBL-BOOK",
+      "actor": "AUDIT",
+      "message": "table morjim|2026-10-19|MOR-B12 double-booked: BF-4SP3DK (14:00, confirmed) overlaps BF-4SP3DK (14:00, confirmed)",
+      "atVirt": "2026-10-18T17:20:07.440+05:30"
+    },
+    {
+      "id": "ERR-0015",
+      "category": "DATA",
+      "signature": "DBL-BOOK",
+      "actor": "AUDIT",
+      "message": "table anjuna|2026-10-19|ANJ-I3 double-booked: BF-ZM4BHA (20:00, confirmed) overlaps BF-LVMW5N (20:00, confirmed)",
+      "atVirt": "2026-10-18T17:20:07.440+05:30"
+    },
+    {
+      "id": "ERR-0016",
+      "category": "DATA",
+      "signature": "DBL-BOOK",
+      "actor": "AUDIT",
+      "message": "table panaji|2026-10-18|PNJ-I6 double-booked: BF-ZV73K8 (18:30, confirmed) overlaps BF-ZV73K8 (18:30, confirmed)",
+      "atVirt": "2026-10-18T17:20:07.440+05:30"
+    },
+    {
+      "id": "ERR-0017",
+      "category": "DATA",
+      "signature": "DBL-BOOK",
+      "actor": "AUDIT",
+      "message": "table morjim|2026-10-19|MOR-B11 double-booked: BF-NMT8MP (15:00, confirmed) overlaps BF-NMT8MP (15:00, confirmed)",
+      "atVirt": "2026-10-18T17:20:07.440+05:30"
+    },
+    {
+      "id": "ERR-0018",
+      "category": "DATA",
+      "signature": "DUP-CODE",
+      "actor": "AUDIT",
+      "message": "booking code BF-4SP3DK exists on 2 records",
+      "atVirt": "2026-10-18T17:20:08.160+05:30"
+    },
+    {
+      "id": "ERR-0019",
+      "category": "DATA",
+      "signature": "DUP-CODE",
+      "actor": "AUDIT",
+      "message": "booking code BF-ZV73K8 exists on 2 records",
+      "atVirt": "2026-10-18T17:20:08.160+05:30"
+    },
+    {
+      "id": "ERR-0020",
+      "category": "DATA",
+      "signature": "DUP-CODE",
+      "actor": "AUDIT",
+      "message": "booking code BF-NMT8MP exists on 13 records",
+      "atVirt": "2026-10-18T17:20:08.160+05:30"
+    },
+    {
+      "id": "ERR-0021",
+      "category": "DATA",
+      "signature": "ILLEGAL-TR",
+      "actor": "AUDIT",
+      "message": "record BF-3BRAYF transitioned completed -> confirmed (not reachable through any legal path)",
+      "atVirt": "2026-10-18T17:20:08.160+05:30"
+    },
+    {
+      "id": "ERR-0022",
+      "category": "DATA",
+      "signature": "ILLEGAL-TR",
+      "actor": "CHAOS",
+      "message": "server ACCEPTED illegal transition completed -> seated on BF-EMH5MK. PATCH has no state machine (finding A4-5).",
+      "atVirt": "2026-10-18T19:38:36.240+05:30"
+    },
+    {
+      "id": "ERR-0023",
+      "category": "DATA",
+      "signature": "ILLEGAL-TR",
+      "actor": "CHAOS",
+      "message": "server ACCEPTED illegal transition completed -> confirmed on BF-VJWHKN. PATCH has no state machine (finding A4-5).",
+      "atVirt": "2026-10-18T20:03:59.760+05:30"
+    },
+    {
+      "id": "ERR-0024",
+      "category": "RACE",
+      "signature": "DBL-BOOK",
+      "actor": "CHAOS",
+      "message": "race pair: BOTH POSTs accepted — BF-5PMMDS and BF-LZAL3U now hold the SAME table PNJ-I8 at 19:00. Server performed no overlap check.",
+      "atVirt": "2026-10-18T20:22:48.000+05:30"
+    },
+    {
+      "id": "ERR-0025",
+      "category": "RACE",
+      "signature": "DBL-BOOK",
+      "actor": "CHAOS",
+      "message": "race pair: BOTH POSTs accepted — BF-SCNJZQ and BF-JFR2V8 now hold the SAME table DP-O3 at 20:30. Server performed no overlap check.",
+      "atVirt": "2026-10-18T20:58:53.760+05:30"
+    },
+    {
+      "id": "ERR-0026",
+      "category": "DATA",
+      "signature": "DUP-CODE",
+      "actor": "AUDIT",
+      "message": "booking code BF-7EA6ZF exists on 2 records",
+      "atVirt": "2026-10-19T04:00:37.440+05:30"
+    },
+    {
+      "id": "ERR-0027",
+      "category": "DATA",
+      "signature": "ILLEGAL-TR",
+      "actor": "AUDIT",
+      "message": "record BF-EMH5MK transitioned completed -> seated (not reachable through any legal path)",
+      "atVirt": "2026-10-19T04:00:37.440+05:30"
+    },
+    {
+      "id": "ERR-0028",
+      "category": "DATA",
+      "signature": "ILLEGAL-TR",
+      "actor": "AUDIT",
+      "message": "record BF-VJWHKN transitioned completed -> confirmed (not reachable through any legal path)",
+      "atVirt": "2026-10-19T04:00:37.440+05:30"
+    },
+    {
+      "id": "ERR-0029",
+      "category": "DATA",
+      "signature": "ILLEGAL-TR",
+      "actor": "AUDIT",
+      "message": "record BF-ZV73K8 transitioned completed -> confirmed (not reachable through any legal path)",
+      "atVirt": "2026-10-19T04:00:37.440+05:30"
+    },
+    {
+      "id": "ERR-0030",
+      "category": "DATA",
+      "signature": "ILLEGAL-TR",
+      "actor": "AUDIT",
+      "message": "record BF-7EA6ZF transitioned completed -> confirmed (not reachable through any legal path)",
+      "atVirt": "2026-10-19T04:00:37.440+05:30"
+    },
+    {
+      "id": "ERR-0031",
+      "category": "RACE",
+      "signature": "DBL-BOOK",
+      "actor": "CHAOS",
+      "message": "race pair: BOTH POSTs accepted — BF-8D4X6K and BF-9LLGGY now hold the SAME table ANJ-I2 at 17:30. Server performed no overlap check.",
+      "atVirt": "2026-10-19T06:22:12.720+05:30"
+    },
+    {
+      "id": "ERR-0032",
+      "category": "RACE",
+      "signature": "DBL-BOOK",
+      "actor": "CHAOS",
+      "message": "race pair: BOTH POSTs accepted — BF-A8KVY7 and BF-VALUXW now hold the SAME table NER-I1 at 14:00. Server performed no overlap check.",
+      "atVirt": "2026-10-19T07:31:45.840+05:30"
+    },
+    {
+      "id": "ERR-0033",
+      "category": "DATA",
+      "signature": "DBL-BOOK",
+      "actor": "AUDIT",
+      "message": "table anjuna|2026-10-19|ANJ-I2 double-booked: BF-8D4X6K (17:30, confirmed) overlaps BF-9LLGGY (17:30, confirmed)",
+      "atVirt": "2026-10-19T13:06:08.640+05:30"
+    },
+    {
+      "id": "ERR-0034",
+      "category": "DATA",
+      "signature": "DBL-BOOK",
+      "actor": "AUDIT",
+      "message": "table nerul|2026-10-19|NER-I1 double-booked: BF-A8KVY7 (14:00, confirmed) overlaps BF-VALUXW (14:00, confirmed)",
+      "atVirt": "2026-10-19T13:06:08.640+05:30"
+    },
+    {
+      "id": "ERR-0035",
+      "category": "DATA",
+      "signature": "ILLEGAL-TR",
+      "actor": "CHAOS",
+      "message": "server ACCEPTED illegal transition completed -> confirmed on BF-KQRC6C. PATCH has no state machine (finding A4-5).",
+      "atVirt": "2026-10-19T14:28:57.360+05:30"
+    },
+    {
+      "id": "ERR-0036",
+      "category": "RACE",
+      "signature": "DBL-BOOK",
+      "actor": "CHAOS",
+      "message": "race pair: BOTH POSTs accepted — BF-E6SUZL and BF-RARAYS now hold the SAME table ANJ-I1 at 20:30. Server performed no overlap check.",
+      "atVirt": "2026-10-19T17:27:57.600+05:30"
+    },
+    {
+      "id": "ERR-0037",
+      "category": "RACE",
+      "signature": "DBL-BOOK",
+      "actor": "CHAOS",
+      "message": "race pair: BOTH POSTs accepted — BF-DR74ZX and BF-6H74Q8 now hold the SAME table DEL-I1 at 13:30. Server performed no overlap check.",
+      "atVirt": "2026-10-19T17:36:59.040+05:30"
+    },
+    {
+      "id": "ERR-0038",
+      "category": "DATA",
+      "signature": "DBL-BOOK",
+      "actor": "AUDIT",
+      "message": "table anjuna|2026-10-20|ANJ-I1 double-booked: BF-E6SUZL (20:30, confirmed) overlaps BF-RARAYS (20:30, confirmed)",
+      "atVirt": "2026-10-20T00:00:10.080+05:30"
+    },
+    {
+      "id": "ERR-0039",
+      "category": "DATA",
+      "signature": "DBL-BOOK",
+      "actor": "AUDIT",
+      "message": "table delhi|2026-10-20|DEL-I1 double-booked: BF-DR74ZX (13:30, confirmed) overlaps BF-6H74Q8 (13:30, confirmed)",
+      "atVirt": "2026-10-20T00:00:10.080+05:30"
+    },
+    {
+      "id": "ERR-0040",
+      "category": "DATA",
+      "signature": "DUP-CODE",
+      "actor": "AUDIT",
+      "message": "booking code BF-B27HSW exists on 2 records",
+      "atVirt": "2026-10-20T00:00:10.800+05:30"
+    },
+    {
+      "id": "ERR-0041",
+      "category": "DATA",
+      "signature": "DUP-CODE",
+      "actor": "AUDIT",
+      "message": "booking code BF-CT96VV exists on 2 records",
+      "atVirt": "2026-10-20T00:00:10.800+05:30"
+    },
+    {
+      "id": "ERR-0042",
+      "category": "DATA",
+      "signature": "ILLEGAL-TR",
+      "actor": "AUDIT",
+      "message": "record BF-KQRC6C transitioned seated -> confirmed (not reachable through any legal path)",
+      "atVirt": "2026-10-20T00:00:10.800+05:30"
+    },
+    {
+      "id": "ERR-0043",
+      "category": "DATA",
+      "signature": "ILLEGAL-TR",
+      "actor": "AUDIT",
+      "message": "record BF-4SP3DK transitioned completed -> confirmed (not reachable through any legal path)",
+      "atVirt": "2026-10-20T00:00:10.800+05:30"
+    },
+    {
+      "id": "ERR-0044",
+      "category": "DATA",
+      "signature": "ILLEGAL-TR",
+      "actor": "AUDIT",
+      "message": "record BF-NMT8MP transitioned completed -> confirmed (not reachable through any legal path)",
+      "atVirt": "2026-10-20T00:00:10.800+05:30"
+    },
+    {
+      "id": "ERR-0045",
+      "category": "DATA",
+      "signature": "ILLEGAL-TR",
+      "actor": "AUDIT",
+      "message": "record BF-B27HSW transitioned completed -> confirmed (not reachable through any legal path)",
+      "atVirt": "2026-10-20T00:00:10.800+05:30"
+    },
+    {
+      "id": "ERR-0046",
+      "category": "DATA",
+      "signature": "ILLEGAL-TR",
+      "actor": "AUDIT",
+      "message": "record BF-CT96VV transitioned completed -> confirmed (not reachable through any legal path)",
+      "atVirt": "2026-10-20T00:00:10.800+05:30"
+    }
+  ],
+  "violations": [
+    {
+      "kind": "double-book",
+      "atVirt": 1792238286240,
+      "detail": {
+        "table": "nerul|2026-10-18|NER-I3",
+        "a": {
+          "code": "BF-NWXLZA",
+          "name": "Marco Walker",
+          "outlet": "nerul",
+          "date": "2026-10-18",
+          "time": "13:00",
+          "guests": 4,
+          "table": "NER-I3",
+          "zone": "indoor",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-17T08:06:00.720Z",
+          "notes": "Racing for the same table"
+        },
+        "b": {
+          "code": "BF-F4FAS2",
+          "name": "Sophie Mehta",
+          "outlet": "nerul",
+          "date": "2026-10-18",
+          "time": "13:00",
+          "guests": 4,
+          "table": "NER-I3",
+          "zone": "indoor",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-17T08:06:00.720Z",
+          "notes": "Racing for the same table"
+        }
+      }
+    },
+    {
+      "kind": "double-book",
+      "atVirt": 1792276238880,
+      "detail": {
+        "table": "delhi|2026-10-18|DEL-I4",
+        "a": {
+          "code": "BF-4YLKVL",
+          "name": "Aarav Mehta",
+          "outlet": "delhi",
+          "date": "2026-10-18",
+          "time": "13:30",
+          "guests": 4,
+          "table": "DEL-I4",
+          "zone": "indoor",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-17T16:52:38.640Z",
+          "notes": "Racing for the same table"
+        },
+        "b": {
+          "code": "BF-WUUMZN",
+          "name": "Harsh Gupta",
+          "outlet": "delhi",
+          "date": "2026-10-18",
+          "time": "13:30",
+          "guests": 4,
+          "table": "DEL-I4",
+          "zone": "indoor",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-17T16:52:38.640Z",
+          "notes": "Racing for the same table"
+        }
+      }
+    },
+    {
+      "kind": "double-book",
+      "atVirt": 1792324207440,
+      "detail": {
+        "table": "anjuna|2026-10-19|ANJ-I2",
+        "a": {
+          "code": "BF-A9CVW5",
+          "name": "Ananya Ghosh",
+          "outlet": "anjuna",
+          "date": "2026-10-19",
+          "time": "20:30",
+          "guests": 2,
+          "table": "ANJ-I2",
+          "zone": "indoor",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-18T10:26:44.160Z",
+          "notes": "Racing for the same table"
+        },
+        "b": {
+          "code": "BF-2XQJV5",
+          "name": "Aarav Bhatt",
+          "outlet": "anjuna",
+          "date": "2026-10-19",
+          "time": "20:30",
+          "guests": 2,
+          "table": "ANJ-I2",
+          "zone": "indoor",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-18T10:26:44.160Z",
+          "notes": "Racing for the same table"
+        }
+      }
+    },
+    {
+      "kind": "double-book",
+      "atVirt": 1792324207440,
+      "detail": {
+        "table": "morjim|2026-10-19|MOR-B12",
+        "a": {
+          "code": "BF-4SP3DK",
+          "name": "Priya Silva",
+          "outlet": "morjim",
+          "date": "2026-10-19",
+          "time": "14:00",
+          "guests": 7,
+          "table": "MOR-B12",
+          "zone": "beachside",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-18T07:41:13.200Z",
+          "notes": ""
+        },
+        "b": {
+          "code": "BF-4SP3DK",
+          "name": "Priya Silva",
+          "outlet": "morjim",
+          "date": "2026-10-19",
+          "time": "14:00",
+          "guests": 7,
+          "table": "MOR-B12",
+          "zone": "beachside",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-18T07:41:13.200Z",
+          "notes": ""
+        }
+      }
+    },
+    {
+      "kind": "double-book",
+      "atVirt": 1792324207440,
+      "detail": {
+        "table": "anjuna|2026-10-19|ANJ-I3",
+        "a": {
+          "code": "BF-ZM4BHA",
+          "name": "Ana Fernandes",
+          "outlet": "anjuna",
+          "date": "2026-10-19",
+          "time": "20:00",
+          "guests": 2,
+          "table": "ANJ-I3",
+          "zone": "indoor",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-18T04:34:21.360Z",
+          "notes": "Racing for the same table"
+        },
+        "b": {
+          "code": "BF-LVMW5N",
+          "name": "Vikram Weber",
+          "outlet": "anjuna",
+          "date": "2026-10-19",
+          "time": "20:00",
+          "guests": 2,
+          "table": "ANJ-I3",
+          "zone": "indoor",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-18T04:34:21.360Z",
+          "notes": "Racing for the same table"
+        }
+      }
+    },
+    {
+      "kind": "double-book",
+      "atVirt": 1792324207440,
+      "detail": {
+        "table": "panaji|2026-10-18|PNJ-I6",
+        "a": {
+          "code": "BF-ZV73K8",
+          "name": "Harsh Walker",
+          "outlet": "panaji",
+          "date": "2026-10-18",
+          "time": "18:30",
+          "guests": 4,
+          "table": "PNJ-I6",
+          "zone": "indoor",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-18T08:04:47.280Z",
+          "notes": "Peanut allergy — please note kitchen"
+        },
+        "b": {
+          "code": "BF-ZV73K8",
+          "name": "Harsh Walker",
+          "outlet": "panaji",
+          "date": "2026-10-18",
+          "time": "18:30",
+          "guests": 4,
+          "table": "PNJ-I6",
+          "zone": "indoor",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-18T08:04:47.280Z",
+          "notes": "Peanut allergy — please note kitchen"
+        }
+      }
+    },
+    {
+      "kind": "double-book",
+      "atVirt": 1792324207440,
+      "detail": {
+        "table": "morjim|2026-10-19|MOR-B11",
+        "a": {
+          "code": "BF-NMT8MP",
+          "name": "Arjun Bhatt",
+          "outlet": "morjim",
+          "date": "2026-10-19",
+          "time": "15:00",
+          "guests": 6,
+          "table": "MOR-B11",
+          "zone": "beachside",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-18T09:07:55.200Z",
+          "notes": "Bringing our own cake"
+        },
+        "b": {
+          "code": "BF-NMT8MP",
+          "name": "Arjun Bhatt",
+          "outlet": "morjim",
+          "date": "2026-10-19",
+          "time": "15:00",
+          "guests": 6,
+          "table": "MOR-B11",
+          "zone": "beachside",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-18T09:07:55.200Z",
+          "notes": "Bringing our own cake"
+        }
+      }
+    },
+    {
+      "kind": "dup-code",
+      "atVirt": 1792324208160,
+      "detail": {
+        "code": "BF-4SP3DK",
+        "count": 2
+      }
+    },
+    {
+      "kind": "dup-code",
+      "atVirt": 1792324208160,
+      "detail": {
+        "code": "BF-ZV73K8",
+        "count": 2
+      }
+    },
+    {
+      "kind": "dup-code",
+      "atVirt": 1792324208160,
+      "detail": {
+        "code": "BF-NMT8MP",
+        "count": 13
+      }
+    },
+    {
+      "kind": "illegal-transition",
+      "atVirt": 1792324208160,
+      "detail": {
+        "code": "BF-3BRAYF",
+        "from": "completed",
+        "to": "confirmed"
+      }
+    },
+    {
+      "kind": "dup-code",
+      "atVirt": 1792362637440,
+      "detail": {
+        "code": "BF-7EA6ZF",
+        "count": 2
+      }
+    },
+    {
+      "kind": "illegal-transition",
+      "atVirt": 1792362637440,
+      "detail": {
+        "code": "BF-EMH5MK",
+        "from": "completed",
+        "to": "seated"
+      }
+    },
+    {
+      "kind": "illegal-transition",
+      "atVirt": 1792362637440,
+      "detail": {
+        "code": "BF-VJWHKN",
+        "from": "completed",
+        "to": "confirmed"
+      }
+    },
+    {
+      "kind": "illegal-transition",
+      "atVirt": 1792362637440,
+      "detail": {
+        "code": "BF-ZV73K8",
+        "from": "completed",
+        "to": "confirmed"
+      }
+    },
+    {
+      "kind": "illegal-transition",
+      "atVirt": 1792362637440,
+      "detail": {
+        "code": "BF-7EA6ZF",
+        "from": "completed",
+        "to": "confirmed"
+      }
+    },
+    {
+      "kind": "double-book",
+      "atVirt": 1792395368640,
+      "detail": {
+        "table": "anjuna|2026-10-19|ANJ-I2",
+        "a": {
+          "code": "BF-8D4X6K",
+          "name": "Emma D'Souza",
+          "outlet": "anjuna",
+          "date": "2026-10-19",
+          "time": "17:30",
+          "guests": 2,
+          "table": "ANJ-I2",
+          "zone": "indoor",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-19T00:50:57.120Z",
+          "notes": "Racing for the same table"
+        },
+        "b": {
+          "code": "BF-9LLGGY",
+          "name": "Marco Fernandes",
+          "outlet": "anjuna",
+          "date": "2026-10-19",
+          "time": "17:30",
+          "guests": 2,
+          "table": "ANJ-I2",
+          "zone": "indoor",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-19T00:50:57.120Z",
+          "notes": "Racing for the same table"
+        }
+      }
+    },
+    {
+      "kind": "double-book",
+      "atVirt": 1792395368640,
+      "detail": {
+        "table": "nerul|2026-10-19|NER-I1",
+        "a": {
+          "code": "BF-A8KVY7",
+          "name": "Mike Desai",
+          "outlet": "nerul",
+          "date": "2026-10-19",
+          "time": "14:00",
+          "guests": 2,
+          "table": "NER-I1",
+          "zone": "indoor",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-19T02:01:19.200Z",
+          "notes": "Racing for the same table"
+        },
+        "b": {
+          "code": "BF-VALUXW",
+          "name": "Ivan Kulkarni",
+          "outlet": "nerul",
+          "date": "2026-10-19",
+          "time": "14:00",
+          "guests": 2,
+          "table": "NER-I1",
+          "zone": "indoor",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-19T02:01:19.200Z",
+          "notes": "Racing for the same table"
+        }
+      }
+    },
+    {
+      "kind": "double-book",
+      "atVirt": 1792434610080,
+      "detail": {
+        "table": "anjuna|2026-10-20|ANJ-I1",
+        "a": {
+          "code": "BF-E6SUZL",
+          "name": "Yash Mehta",
+          "outlet": "anjuna",
+          "date": "2026-10-20",
+          "time": "20:30",
+          "guests": 2,
+          "table": "ANJ-I1",
+          "zone": "indoor",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-19T11:57:25.200Z",
+          "notes": "Racing for the same table"
+        },
+        "b": {
+          "code": "BF-RARAYS",
+          "name": "Arjun Iyer",
+          "outlet": "anjuna",
+          "date": "2026-10-20",
+          "time": "20:30",
+          "guests": 2,
+          "table": "ANJ-I1",
+          "zone": "indoor",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-19T11:57:25.200Z",
+          "notes": "Racing for the same table"
+        }
+      }
+    },
+    {
+      "kind": "double-book",
+      "atVirt": 1792434610080,
+      "detail": {
+        "table": "delhi|2026-10-20|DEL-I1",
+        "a": {
+          "code": "BF-DR74ZX",
+          "name": "Isha Rao",
+          "outlet": "delhi",
+          "date": "2026-10-20",
+          "time": "13:30",
+          "guests": 2,
+          "table": "DEL-I1",
+          "zone": "indoor",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-19T12:06:12.240Z",
+          "notes": "Racing for the same table"
+        },
+        "b": {
+          "code": "BF-6H74Q8",
+          "name": "Tom Mehta",
+          "outlet": "delhi",
+          "date": "2026-10-20",
+          "time": "13:30",
+          "guests": 2,
+          "table": "DEL-I1",
+          "zone": "indoor",
+          "status": "confirmed",
+          "seatedAt": null,
+          "createdAt": "2026-10-19T12:06:12.240Z",
+          "notes": "Racing for the same table"
+        }
+      }
+    },
+    {
+      "kind": "dup-code",
+      "atVirt": 1792434610800,
+      "detail": {
+        "code": "BF-B27HSW",
+        "count": 2
+      }
+    },
+    {
+      "kind": "dup-code",
+      "atVirt": 1792434610800,
+      "detail": {
+        "code": "BF-CT96VV",
+        "count": 2
+      }
+    },
+    {
+      "kind": "illegal-transition",
+      "atVirt": 1792434610800,
+      "detail": {
+        "code": "BF-KQRC6C",
+        "from": "seated",
+        "to": "confirmed"
+      }
+    },
+    {
+      "kind": "illegal-transition",
+      "atVirt": 1792434610800,
+      "detail": {
+        "code": "BF-4SP3DK",
+        "from": "completed",
+        "to": "confirmed"
+      }
+    },
+    {
+      "kind": "illegal-transition",
+      "atVirt": 1792434610800,
+      "detail": {
+        "code": "BF-NMT8MP",
+        "from": "completed",
+        "to": "confirmed"
+      }
+    },
+    {
+      "kind": "illegal-transition",
+      "atVirt": 1792434610800,
+      "detail": {
+        "code": "BF-B27HSW",
+        "from": "completed",
+        "to": "confirmed"
+      }
+    },
+    {
+      "kind": "illegal-transition",
+      "atVirt": 1792434610800,
+      "detail": {
+        "code": "BF-CT96VV",
+        "from": "completed",
+        "to": "confirmed"
+      }
+    }
+  ]
+}

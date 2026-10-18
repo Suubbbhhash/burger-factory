@@ -1,0 +1,16 @@
+{
+  "name": "@burger-factory/simulation",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Real-life digital-twin simulation pipeline for The Burger Factory (LAN/Vite mode). Zero dependencies.",
+  "engines": { "node": ">=18.0.0" },
+  "scripts": {
+    "sim": "node run.mjs",
+    "probe": "node run.mjs --probe-only",
+    "smoke": "node run.mjs --tag smoke --days 1 --accel 600 --cap 200",
+    "standard": "node run.mjs --tag standard --days 7 --accel 240",
+    "soak": "node run.mjs --tag soak --days 30 --accel 480 --multiplier 3 --chaos aggressive",
+    "harness": "node test-harness/server.mjs"
+  }
+}

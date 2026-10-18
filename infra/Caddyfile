@@ -1,0 +1,31 @@
+# ============================================
+# THE BURGER FACTORY — CADDY REVERSE PROXY
+# Automatic HTTPS, Static Assets & SSE Buffering Off
+# ============================================
+
+{
+  email admin@burgerfactory.in
+}
+
+:80 {
+  # API & SSE endpoints (flush immediately for SSE)
+  handle /api/* {
+    reverse_proxy api:4000 {
+      flush_interval -1
+    }
+  }
+
+  # Health endpoint
+  handle /health {
+    reverse_proxy api:4000
+  }
+
+  # Static web assets
+  handle {
+    root * /srv/web
+    file_server
+    try_files {path} /index.html
+  }
+
+  encode zstd gzip
+}

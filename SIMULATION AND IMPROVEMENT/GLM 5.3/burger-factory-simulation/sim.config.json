@@ -1,0 +1,34 @@
+{
+  "target": "http://localhost:3000",
+  "days": 7,
+  "startDate": null,
+  "acceleration": 240,
+  "maxConcurrentActors": 800,
+  "seed": null,
+  "chaos": "standard",
+  "demand": {
+    "multiplier": 1,
+    "weekendFactor": 1.7,
+    "seasonFactor": 1.15
+  },
+  "network": {
+    "timeoutMs": 8000
+  },
+  "audit": {
+    "everyMutations": 250,
+    "sseGraceMs": 2500
+  },
+  "log": {
+    "path": "SIMULATION_LOG.txt",
+    "level": "info",
+    "append": true
+  },
+  "reports": {
+    "dir": "reports"
+  },
+  "sseMonitor": true,
+  "warmup": {
+    "minutes": 30,
+    "bookings": 4
+  }
+}

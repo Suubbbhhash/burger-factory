@@ -1,0 +1,44 @@
+================================================================================
+THE BURGER FACTORY — REAL-LIFE MULTI-DAY & CONCURRENT SIMULATION REPORT
+================================================================================
+Generated At        : 2026-10-17T17:49:28.530Z
+Target Endpoint     : http://localhost:3000
+Simulated Horizon   : 7 Full Service Days × 7 Outlets (104 Physical Tables)
+Total HTTP Requests : 2055
+SSE Events Captured : 1275
+Latency Metrics     : p50 = 12.35 ms | p95 = 28.19 ms | p99 = 38.76 ms
+Overall Verdict     : PASS (ZERO ERRORS)
+================================================================================
+
+1. EXECUTIVE SIMULATION TELEMETRY
+--------------------------------------------------------------------------------
+- Online Bookings Requested   : 661
+- Online Bookings Confirmed   : 531
+- Rejected (No Table / Full)  : 130
+- Walk-In Parties Seated      : 77
+- Customer Self-Cancellations : 75
+- Host Seated Transitions     : 274
+- Host Completed Turns        : 266
+- Host No-Shows Marked        : 51
+- Chaos & Security Payloads   : 5
+- Double-Booking Collisions   : 0
+
+2. 7-DAY SERVICE BREAKDOWN ACROSS ALL 7 OUTLETS
+--------------------------------------------------------------------------------
+DATE         | DAY TYPE | BOOKED | WALK-INS | SEATED | COMPLETED | CANCELLED | NO-SHOW
+--------------------------------------------------------------------------------
+2026-10-17 | WEEKEND  |     51 |        1 |     30 |        22 |         8 |       5
+2026-10-18 | WEEKEND  |     71 |        4 |     36 |        36 |        10 |       6
+2026-10-19 | WEEKDAY  |     87 |       16 |     42 |        42 |        13 |       6
+2026-10-20 | WEEKDAY  |     70 |       12 |     42 |        42 |        11 |       4
+2026-10-21 | WEEKDAY  |     80 |       14 |     38 |        38 |        11 |      10
+2026-10-22 | WEEKDAY  |     64 |       10 |     36 |        36 |         4 |       8
+2026-10-23 | WEEKEND  |    108 |       20 |     50 |        50 |        18 |      12
+
+3. ERRORS & VULNERABILITIES DISCOVERED (0 TOTAL)
+================================================================================
+Zero errors! All concurrency, validation, security, and state-machine invariants passed.
+
+4. WARNINGS & CODE HYGIENE NOTES (0 TOTAL)
+================================================================================
+Zero warnings.

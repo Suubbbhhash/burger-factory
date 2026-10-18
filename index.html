@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>The Burger Factory | Burgers &amp; Table Reservations — Goa &amp; New Delhi</title>
+  <meta name="description" content="The Burger Factory — Freshly ground burgers on house potato buns, served with hand-cut potato wedges across Goa and New Delhi. Reserve your table online." />
+  <meta name="keywords" content="Burger Factory, Goa, Anjuna, Morjim, Panaji, Dona Paula, Nerul, Vagator, table reservation" />
+  <meta property="og:title" content="The Burger Factory | Burgers &amp; Table Reservations" />
+  <meta property="og:description" content="Freshly ground burgers on house potato buns. Reserve your table online across our 7 outlets." />
+  <meta property="og:type" content="website" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="/src/styles/index.css" />
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <nav id="navbar" class="navbar">
+    <div class="container nav-container">
+      <a href="#hero" class="nav-logo" id="nav-logo">
+        <span>The Burger Factory</span>
+        <span class="nav-logo-stamp">EST. 2015</span>
+      </a>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#hero" class="nav-link active">Home</a></li>
+        <li><a href="#about" class="nav-link">Kitchen</a></li>
+        <li><a href="#menu" class="nav-link">Menu</a></li>
+        <li><a href="#locations" class="nav-link">Outlets</a></li>
+        <li><a href="#reviews" class="nav-link">Guest Notes</a></li>
+        <li><a href="#lookup-section" class="nav-link">Manage Booking</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="#booking" class="btn btn-mustard btn-sm" id="nav-book-btn">
+          Reserve Table
+        </a>
+        <a href="/manager.html" class="btn btn-outline btn-sm" id="nav-staff-link">
+          Staff Portal
+        </a>
+        <button class="hamburger" id="hamburger" aria-label="Toggle navigation menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="mobile-menu" id="mobile-menu">
+    <div class="mobile-menu-overlay"></div>
+    <div class="mobile-menu-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: var(--line); padding-bottom: 1rem;">
+        <span style="font-family: var(--font-display); font-weight: 800; font-size: 1.15rem;">The Burger Factory</span>
+        <button type="button" id="mobile-menu-close" style="background: none; border: var(--line); border-radius: 4px; width: 36px; height: 36px; font-weight: 800; cursor: pointer;">X</button>
+      </div>
+      <ul class="mobile-nav-links">
+        <li><a href="#hero" class="mobile-nav-link active">Home</a></li>
+        <li><a href="#about" class="mobile-nav-link">Kitchen</a></li>
+        <li><a href="#menu" class="mobile-nav-link">Menu</a></li>
+        <li><a href="#locations" class="mobile-nav-link">Outlets</a></li>
+        <li><a href="#reviews" class="mobile-nav-link">Guest Notes</a></li>
+        <li><a href="#lookup-section" class="mobile-nav-link">Manage / Cancel Booking</a></li>
+        <li><a href="#booking" class="btn btn-mustard btn-full" style="margin-top: 0.5rem;">Reserve a Table</a></li>
+        <li><a href="/manager.html" class="btn btn-outline btn-full">Staff Portal</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <main>
+    <!-- Hero Section -->
+    <section id="hero" class="hero">
+      <div class="container">
+        <div class="hero-grid">
+          <div class="hero-content">
+            <!-- Burger Joke Rotator -->
+            <div class="joke-topbar">
+              <span class="joke-tag" id="hero-joke-author">BOARD NOTE · MITCH HEDBERG</span>
+              <button type="button" class="btn-next-joke" id="btn-shuffle-joke">Another Joke &#8635;</button>
+            </div>
+            <h1 class="hero-title" id="hero-joke-headline">"How does a sesame seed stick to a bun? That's magical."</h1>
+            <p class="hero-lead" id="hero-joke-punchline">There must be some sesame seed glue out there. Either that or they're adhesive on one side—peel off the backing, place it on the bun.</p>
+            
+            <div class="hero-cta-group">
+              <a href="#booking" class="btn btn-mustard btn-lg">
+                Book a Table
+              </a>
+              <a href="#menu" class="btn btn-paper btn-lg">
+                View Menu
+              </a>
+            </div>
+
+            <!-- Live Availability Search Strip -->
+            <div class="live-availability-strip" id="live-availability-strip">
+              <div class="strip-header">
+                <span>Instant Table Availability (Today)</span>
+                <span class="strip-live-badge">Live Sync</span>
+              </div>
+              <div class="strip-controls">
+                <select class="strip-select" id="strip-location" aria-label="Select Outlet">
+                  <option value="anjuna">Anjuna (Main Kitchen)</option>
+                  <option value="morjim">Morjim (Beachfront)</option>
+                  <option value="dona-paula">Dona Paula</option>
+                  <option value="panaji">Panaji (La Citadel)</option>
+                  <option value="vagator">Vagator</option>
+                  <option value="nerul">Nerul</option>
+                  <option value="delhi">New Delhi (GK)</option>
+                </select>
+                <div class="stepper">
+                  <button type="button" class="stepper-btn" id="strip-guest-minus" aria-label="Decrease guests">-</button>
+                  <span class="stepper-value" id="strip-guest-val">2 Guests</span>
+                  <button type="button" class="stepper-btn" id="strip-guest-plus" aria-label="Increase guests">+</button>
+                </div>
+              </div>
+              <div class="strip-slots" id="strip-slots-container">
+                <!-- Real-time slot pills injected by JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Photography Frame -->
+          <div class="hero-photo-wrapper">
+            <div class="hero-photo-frame">
+              <img 
+                src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80" 
+                alt="Double Cheddar Bacon BBQ Burger at The Burger Factory"
+                width="640" 
+                height="480"
+                loading="eager"
+                fetchpriority="high"
+              />
+              <div class="hero-photo-caption">
+                <span>DOUBLE CHEDDAR BACON BBQ</span>
+                <span>SERVED WITH HAND-CUT WEDGES</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Kitchen Standards Section -->
+    <section id="about" class="section">
+      <div class="container">
+        <div style="max-width: 680px;">
+          <span class="section-tag">Kitchen Standards</span>
+          <h2>Prepared Fresh Every Service</h2>
+          <p style="font-size: var(--step-1); margin-top: 0.5rem;">
+            Founded in Anjuna in 2015, our kitchens prepare every patty, sauce, and batch of hand-cut wedges from whole ingredients before service begins.
+          </p>
+        </div>
+
+        <div class="craft-grid">
+          <div class="craft-card">
+            <div class="craft-card-icon">01</div>
+            <h3>Daily Ground Patties</h3>
+            <p>Imported beef, tender chicken breast, pork, and scratch-made vegetarian patties seasoned and pressed fresh each morning.</p>
+          </div>
+          <div class="craft-card">
+            <div class="craft-card-icon">02</div>
+            <h3>House Potato Buns &amp; Wedges</h3>
+            <p>Soft, toasted potato buns that hold up to rich toppings—paired with skin-on hand-cut potato wedges and house salad on every plate.</p>
+          </div>
+          <div class="craft-card">
+            <div class="craft-card-icon">03</div>
+            <h3>Signature Pairings</h3>
+            <p>From French brie with cranberry compote to ripe Goan mango, avocado, blue cheese, and crispy panko zucchini fries.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Menu Section -->
+    <section id="menu" class="section">
+      <div class="container">
+        <div class="menu-header-bar">
+          <div>
+            <span class="section-tag">All-Day Dining</span>
+            <h2>Menu</h2>
+            <p>All burgers are served on toasted potato buns with a side of hand-cut potato wedges and fresh house salad. Prices in INR (&#8377;).</p>
+          </div>
+          <div class="menu-nav-tabs" id="menu-category-tabs">
+            <button class="chip active" data-cat="all">All Items</button>
+            <button class="chip" data-cat="beef">Beef</button>
+            <button class="chip" data-cat="chicken">Chicken</button>
+            <button class="chip" data-cat="pork">Pork</button>
+            <button class="chip" data-cat="veg">Vegetarian</button>
+            <button class="chip" data-cat="sides">Sides</button>
+            <button class="chip" data-cat="shakes">Shakes &amp; Coolers</button>
+          </div>
+        </div>
+
+        <div class="menu-items-grid" id="menu-items-container">
+          <!-- Rendered dynamically via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Outlets Section -->
+    <section id="locations" class="section">
+      <div class="container">
+        <span class="section-tag">Locations</span>
+        <h2>Our Outlets in Goa &amp; New Delhi</h2>
+        <p>Select any outlet below to view operating hours, directions, or reserve a table directly.</p>
+
+        <div class="locations-container" id="locations-container">
+          <!-- Injected by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Guest Notes Section -->
+    <section id="reviews" class="section">
+      <div class="container">
+        <span class="section-tag">Diner Notes</span>
+        <h2>From Our Regulars</h2>
+        <p>Notes from guests across our Goa and New Delhi dining rooms.</p>
+
+        <div class="reviews-wall" id="reviews-wall">
+          <!-- Injected by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 4-Step Interactive Booking Engine -->
+    <section id="booking" class="booking-section">
+      <div class="container">
+        <div class="booking-layout">
+          <div class="booking-card">
+            <header style="margin-bottom: var(--space-md); border-bottom: var(--line); padding-bottom: var(--space-sm);">
+              <span class="section-tag">Online Reservations</span>
+              <h2 style="font-size: var(--step-3);">Reserve a Table</h2>
+              <p>Select your outlet, party size, and live time slot for an instant table confirmation.</p>
+            </header>
+
+            <form id="main-booking-form" novalidate>
+              <!-- Step 1: Outlet & Zone -->
+              <div class="step-block">
+                <div class="step-title">
+                  <span class="step-number">1</span>
+                  <span>Select Outlet &amp; Seating Area</span>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="book-location">Outlet Location</label>
+                    <select class="form-select" id="book-location" required>
+                      <option value="anjuna">Anjuna (Gumal Vaddo)</option>
+                      <option value="morjim">Morjim (Beach Road)</option>
+                      <option value="dona-paula">Dona Paula</option>
+                      <option value="panaji">Panaji (La Citadel Colony)</option>
+                      <option value="vagator">Vagator</option>
+                      <option value="nerul">Nerul</option>
+                      <option value="delhi">New Delhi (Greater Kailash)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="book-zone">Seating Preference</label>
+                    <select class="form-select" id="book-zone">
+                      <option value="any">Best Available Table</option>
+                      <option value="indoor">Indoor Dining</option>
+                      <option value="outdoor">Outdoor / Garden</option>
+                      <option value="beachside">Beachfront Deck (Morjim)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 2: Date & Party Size -->
+              <div class="step-block">
+                <div class="step-title">
+                  <span class="step-number">2</span>
+                  <span>Select Date &amp; Party Size</span>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="book-date">Reservation Date</label>
+                    <input type="date" class="form-input" id="book-date" required />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Number of Guests</label>
+                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                      <div class="stepper">
+                        <button type="button" class="stepper-btn" id="book-guest-minus" aria-label="Decrease guests">-</button>
+                        <span class="stepper-value" id="book-guest-val">2</span>
+                        <button type="button" class="stepper-btn" id="book-guest-plus" aria-label="Increase guests">+</button>
+                      </div>
+                      <span style="font-size: var(--step--1); color: var(--ink-soft);" id="book-guest-label">Guests (2-seater)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 3: Real-Time Live Slot Pills -->
+              <div class="step-block">
+                <div class="step-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="step-number">3</span>
+                    <span>Select Time Slot</span>
+                  </div>
+                  <span class="strip-live-badge" style="font-size: 0.75rem;">Real-Time Inventory</span>
+                </div>
+                <div class="time-slots-grid" id="time-slot-chips">
+                  <!-- Injected by JS -->
+                </div>
+                <input type="hidden" id="book-selected-time" value="13:00" required />
+              </div>
+
+              <!-- Step 4: Contact & Details -->
+              <div class="step-block">
+                <div class="step-title">
+                  <span class="step-number">4</span>
+                  <span>Guest Details</span>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="book-phone">Mobile Number (10-digit Indian number)</label>
+                    <input type="tel" class="form-input" id="book-phone" placeholder="+91 98765 43210" required />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="book-name">Full Name</label>
+                    <input type="text" class="form-input" id="book-name" placeholder="Priya Sharma" required />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="book-email">Email Address (Optional)</label>
+                    <input type="email" class="form-input" id="book-email" placeholder="priya@example.com" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="book-occasion">Occasion (Optional)</label>
+                    <select class="form-select" id="book-occasion">
+                      <option value="">None</option>
+                      <option value="birthday">Birthday</option>
+                      <option value="anniversary">Anniversary</option>
+                      <option value="date">Date Night</option>
+                      <option value="business">Business Dining</option>
+                      <option value="other">Group Gathering</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="book-notes">Dietary or Seating Notes (Optional)</label>
+                  <textarea class="form-textarea" id="book-notes" rows="2" placeholder="Allergies, high-chair request, seating notes..."></textarea>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-mustard btn-lg btn-full" id="btn-submit-booking">
+                Confirm Table Reservation
+              </button>
+            </form>
+          </div>
+
+          <!-- Right Column: Sticky Live Summary Card -->
+          <aside class="booking-summary-card">
+            <div class="summary-title">BOOKING SUMMARY</div>
+            <div class="summary-row">
+              <span class="summary-label">Outlet:</span>
+              <span class="summary-val" id="sum-outlet">Anjuna</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Date:</span>
+              <span class="summary-val" id="sum-date">Today</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Time:</span>
+              <span class="summary-val" id="sum-time">1:00 PM</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Party Size:</span>
+              <span class="summary-val" id="sum-guests">2 Guests</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Seating:</span>
+              <span class="summary-val" id="sum-zone">Best Available</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Dining Window:</span>
+              <span class="summary-val">90 Minutes</span>
+            </div>
+            <div style="font-size: 0.74rem; color: var(--ink-soft); margin-top: 1rem; line-height: 1.45;">
+              Tables are held for 15 minutes past your reserved time. If your plans change, you can cancel instantly below using your Booking Reference.
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- Self-Service Lookup & Cancel Section -->
+    <section id="lookup-section" class="section">
+      <div class="container">
+        <div class="lookup-card">
+          <div style="text-align: center; margin-bottom: var(--space-sm);">
+            <span class="section-tag">Manage Booking</span>
+            <h3>Check or Cancel a Reservation</h3>
+            <p>Enter your Booking Reference (e.g. BF-7K9M2W) and the last 4 digits of your phone number.</p>
+          </div>
+
+          <form id="lookup-form" style="display: flex; flex-direction: column; gap: 0.85rem;">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="lookup-ref">Booking Reference</label>
+                <input type="text" class="form-input" id="lookup-ref" placeholder="BF-7K9M2W" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="lookup-phone4">Last 4 Digits of Phone</label>
+                <input type="text" class="form-input" id="lookup-phone4" placeholder="2345" maxlength="4" inputmode="numeric" required />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-paper btn-full" id="btn-lookup-submit">
+              Find Reservation
+            </button>
+          </form>
+
+          <div id="lookup-result-container" style="margin-top: 1.25rem; display: none;"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Thermal Ticket Modal Backdrop -->
+  <div class="modal-overlay" id="booking-modal-overlay">
+    <div id="ticket-modal-mount"></div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <h4>The Burger Factory</h4>
+          <p>Flame-grilled gourmet burgers on house potato buns, served with hand-cut potato wedges and fresh salad across Goa and New Delhi.</p>
+        </div>
+        <div>
+          <h4>North Goa</h4>
+          <p>Anjuna · Gumal Vaddo<br/>Morjim · Beach Road<br/>Vagator · Ozran Beach Road<br/>Nerul · Near Nerul Bridge</p>
+        </div>
+        <div>
+          <h4>Central Goa &amp; NCR</h4>
+          <p>Panaji · La Citadel Colony<br/>Dona Paula · Jetty Road<br/>New Delhi · Greater Kailash</p>
+        </div>
+        <div>
+          <h4>Hours &amp; Contact</h4>
+          <p>Daily: 12:30 PM – 10:30 PM<br/>Phone: +91 98765 43210<br/>reservations@burgerfactory.in</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2026 The Burger Factory. All rights reserved.</span>
+        <a href="/manager.html" style="color: var(--paper); text-decoration: underline; font-family: var(--font-mono); font-size: 0.78rem;">Staff Portal</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Mobile Sticky Bottom Bar (phones only) -->
+  <div class="mobile-bottom-bar">
+    <a href="#menu" class="btn btn-paper btn-sm" style="flex: 1; text-align: center;">Menu</a>
+    <a href="#booking" class="btn btn-mustard btn-sm" style="flex: 1.4; text-align: center;">Book a Table</a>
+    <a href="#lookup-section" class="btn btn-outline btn-sm" style="flex: 1; text-align: center;">My Booking</a>
+  </div>
+
+  <script type="module" src="/src/js/main.js"></script>
+</body>
+</html>

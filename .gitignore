@@ -1,0 +1,10 @@
+node_modules/
+dist/
+sim_logs/
+sim_runtime*
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
+.system_generated/
+.env

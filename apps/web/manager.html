@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>Staff Portal | The Burger Factory</title>
+  <meta name="robots" content="noindex, nofollow" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="/src/styles/index.css" />
+  <link rel="stylesheet" href="/src/styles/manager.css" />
+</head>
+<body class="manager-body">
+
+  <!-- Built-In Staff Portal Passcode Gate (Single Unified Staff Portal) -->
+  <div class="modal-overlay" id="staff-auth-gate" style="background: var(--paper-deep); z-index: 2000;">
+    <div style="background: var(--paper-surface); border: var(--line-strong); border-radius: var(--radius); padding: 2.25rem 1.75rem; max-width: 400px; width: 100%; box-shadow: var(--shadow-hard-lg);">
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <span class="section-tag">Restricted Access</span>
+        <h2 style="font-size: var(--step-2); margin-top: 0.35rem;">Staff Portal</h2>
+        <p style="font-size: var(--step--1); color: var(--ink-soft); margin-top: 0.25rem;">Enter staff passcode to access live floor operations and reservations.</p>
+      </div>
+
+      <form id="staff-gate-form">
+        <div class="form-group">
+          <label class="form-label" for="staff-gate-pass">Staff Passcode</label>
+          <input type="password" class="form-input" id="staff-gate-pass" placeholder="Enter passcode" required />
+        </div>
+        <div id="staff-gate-error" style="display: none; color: var(--ketchup); font-size: 0.8rem; font-weight: 700; margin-bottom: 0.75rem;"></div>
+        <button type="submit" class="btn btn-mustard btn-full" style="margin-bottom: 0.65rem;">
+          Unlock Staff Portal
+        </button>
+        <a href="/" class="btn btn-outline btn-sm btn-full">
+          Return to Customer Site
+        </a>
+      </form>
+    </div>
+  </div>
+
+  <!-- Screen Operations UI (Hidden during Print) -->
+  <div class="screen-only-wrapper">
+    <!-- Staff Portal Top Navigation -->
+    <header class="mgr-navbar">
+      <div class="mgr-nav-inner">
+        <div class="mgr-brand-group">
+          <a href="/" class="nav-logo" style="font-size: 1.2rem;">
+            <span>The Burger Factory</span>
+          </a>
+          <span class="mgr-badge">STAFF PORTAL</span>
+          <span class="mgr-live-indicator live" id="mgr-live-status">LIVE SYNC</span>
+        </div>
+
+        <div class="mgr-nav-actions">
+          <span id="mgr-live-clock" class="mgr-clock"></span>
+          <button type="button" class="btn btn-mustard btn-sm" id="btn-print-daysheet">
+            Print Day Sheet
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" id="btn-mgr-logout">
+            Lock Portal
+          </button>
+          <a href="/" class="btn btn-paper btn-sm">
+            Customer Site
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Staff Portal Grid Layout -->
+    <div class="mgr-layout">
+      <!-- Left Sidebar: Filters & Controls -->
+      <aside class="mgr-sidebar">
+        <div class="mgr-filter-group">
+          <div class="sidebar-label">Active Outlet</div>
+          <select class="mgr-select" id="mgr-location-filter">
+            <option value="anjuna">Anjuna (Main Kitchen)</option>
+            <option value="morjim">Morjim (Beachfront)</option>
+            <option value="dona-paula">Dona Paula</option>
+            <option value="panaji">Panaji (La Citadel)</option>
+            <option value="vagator">Vagator</option>
+            <option value="nerul">Nerul</option>
+            <option value="delhi">New Delhi (GK)</option>
+          </select>
+        </div>
+
+        <div class="mgr-filter-group">
+          <div class="sidebar-label">Service Date</div>
+          <input type="date" class="mgr-date-input" id="mgr-date-filter" />
+        </div>
+
+        <div class="mgr-filter-group">
+          <div class="sidebar-label">Reservation Status</div>
+          <div class="status-filters" id="mgr-status-filters">
+            <button class="status-filter-btn active" data-status="all">
+              <span>All Bookings</span>
+              <span id="count-all">0</span>
+            </button>
+            <button class="status-filter-btn" data-status="confirmed">
+              <span>Confirmed</span>
+              <span id="count-confirmed">0</span>
+            </button>
+            <button class="status-filter-btn" data-status="seated">
+              <span>Seated</span>
+              <span id="count-seated">0</span>
+            </button>
+            <button class="status-filter-btn" data-status="completed">
+              <span>Completed</span>
+              <span id="count-completed">0</span>
+            </button>
+            <button class="status-filter-btn" data-status="no-show">
+              <span>No-Shows</span>
+              <span id="count-noshow">0</span>
+            </button>
+            <button class="status-filter-btn" data-status="cancelled">
+              <span>Cancelled</span>
+              <span id="count-cancelled">0</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="mgr-sidebar-footer">
+          <button type="button" class="btn btn-paper btn-full btn-sm" id="btn-export-csv">
+            Export CSV Report
+          </button>
+          <button type="button" class="btn btn-outline btn-full btn-sm" id="btn-refresh-dashboard">
+            Refresh Now
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main class="mgr-content">
+        <!-- Compact KPI Strip -->
+        <section class="mgr-stats-strip">
+          <div class="mgr-stat-box">
+            <span class="stat-label">Active Bookings</span>
+            <span class="stat-val" id="stat-active">0</span>
+          </div>
+          <div class="mgr-stat-box">
+            <span class="stat-label">Confirmed</span>
+            <span class="stat-val" style="color: var(--mustard);" id="stat-confirmed">0</span>
+          </div>
+          <div class="mgr-stat-box">
+            <span class="stat-label">Seated Tables</span>
+            <span class="stat-val" style="color: var(--sea);" id="stat-seated">0</span>
+          </div>
+          <div class="mgr-stat-box">
+            <span class="stat-label">Expected Covers</span>
+            <span class="stat-val" id="stat-guests">0</span>
+          </div>
+          <div class="mgr-stat-box">
+            <span class="stat-label">Completed</span>
+            <span class="stat-val" style="color: var(--leaf);" id="stat-completed">0</span>
+          </div>
+          <div class="mgr-stat-box">
+            <span class="stat-label">Cancelled / No-Show</span>
+            <span class="stat-val" style="color: var(--ketchup);" id="stat-noshow">0</span>
+          </div>
+        </section>
+
+        <!-- Arriving Soon Lane -->
+        <section class="arriving-soon-lane">
+          <div class="lane-header">
+            <h3 style="font-size: var(--step-0);">Arriving Within 30 Minutes</h3>
+            <span style="font-size: 0.72rem; color: var(--ink-soft); font-family: var(--font-mono);">One-tap check-in</span>
+          </div>
+          <div class="lane-chips" id="arriving-lane-container"></div>
+        </section>
+
+        <!-- Visual Spatial Table Floor Plan Canvas -->
+        <section class="mgr-floor-section">
+          <div class="floor-header-bar">
+            <h3 style="font-size: var(--step-1);">Dining Room Floor Plan</h3>
+            <div class="floor-legend">
+              <span class="legend-item"><span class="legend-dot" style="background: var(--paper-surface); border-color: var(--leaf);"></span> Free (Tap to Seat Walk-In)</span>
+              <span class="legend-item"><span class="legend-dot" style="background: #FFFDF7; border-color: var(--mustard);"></span> Reserved</span>
+              <span class="legend-item"><span class="legend-dot" style="background: #F0F7F6; border-color: var(--sea);"></span> Seated (90m Turn)</span>
+              <span class="legend-item"><span class="legend-dot" style="background: #FFF5F4; border-color: var(--ketchup);"></span> Overtime (&gt;90m)</span>
+            </div>
+          </div>
+
+          <div class="floor-grid-canvas" id="mgr-floor-canvas"></div>
+        </section>
+
+        <!-- Reservations Manifest Table & Mobile Cards -->
+        <section class="mgr-table-section">
+          <div class="mgr-table-header">
+            <h3 style="font-size: var(--step-1);">Service Manifest</h3>
+            <input type="text" class="mgr-search-input" id="mgr-search" placeholder="Search name, ref code, or phone (/)" />
+          </div>
+
+          <div class="table-responsive-wrapper">
+            <table class="mgr-table" id="mgr-reservations-table">
+              <thead>
+                <tr>
+                  <th>REF CODE</th>
+                  <th>GUEST & PHONE</th>
+                  <th>TIME</th>
+                  <th>PAX</th>
+                  <th>TABLE</th>
+                  <th>ZONE</th>
+                  <th>STATUS</th>
+                  <th>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody id="mgr-table-body"></tbody>
+            </table>
+            <div id="mgr-table-empty" style="display: none; padding: 2rem; text-align: center; color: var(--ink-soft); font-weight: 600;">
+              No reservations match the selected filters.
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Walk-In Quick Seat Modal -->
+  <div class="modal-overlay" id="walkin-modal-overlay">
+    <div style="background: var(--paper-surface); border: var(--line-strong); border-radius: var(--radius); padding: 1.5rem; max-width: 420px; width: 100%; box-shadow: var(--shadow-hard-lg);">
+      <h3 style="font-size: var(--step-1); margin-bottom: 0.25rem;" id="walkin-table-title">Seat Walk-In Party</h3>
+      <p style="font-size: var(--step--1); color: var(--ink-soft); margin-bottom: 1rem;" id="walkin-table-desc"></p>
+
+      <form id="walkin-form">
+        <div class="form-group">
+          <label class="form-label" for="walkin-name">Guest Name</label>
+          <input type="text" class="form-input" id="walkin-name" value="Walk-in Guest" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="walkin-guests">Party Size (Covers)</label>
+            <select class="form-select" id="walkin-guests">
+              <option value="1">1 Guest</option>
+              <option value="2" selected>2 Guests</option>
+              <option value="3">3 Guests</option>
+              <option value="4">4 Guests</option>
+              <option value="5">5 Guests</option>
+              <option value="6">6 Guests</option>
+              <option value="8">8 Guests</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="walkin-phone">Phone (Optional)</label>
+            <input type="tel" class="form-input" id="walkin-phone" placeholder="+91..." />
+          </div>
+        </div>
+        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+          <button type="submit" class="btn btn-mustard btn-full" id="btn-confirm-walkin">
+            Seat Table Now
+          </button>
+          <button type="button" class="btn btn-outline" id="btn-close-walkin">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- HOTEL-GRADE PRINTABLE DAY SHEET (Visible strictly when printing) -->
+  <section id="print-daysheet-container" class="print-only-daysheet" aria-hidden="true">
+    <!-- Dynamically populated by renderPrintDaySheet() in manager.js before window.print() -->
+  </section>
+
+  <script type="module" src="/src/js/manager.js"></script>
+</body>
+</html>

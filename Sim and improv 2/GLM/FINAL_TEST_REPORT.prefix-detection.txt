@@ -1,0 +1,174 @@
+==============================================================================
+THE BURGER FACTORY — FINAL TEST REPORT (ALL IMPROVEMENTS IN ONE)
+==============================================================================
+Generated : 2026-10-18T04:50:32.988Z
+Project   : /home/z/my-project/work/bf-prefix
+Server    : vite:3211
+Cases     : 21 passed / 55 failed (76 total)
+Duration  : 9.1s
+Latency   : p50 1.4ms | p95 30.7ms | p99 32.3ms | n=84
+
+PER-GROUP RESULTS
+------------------------------------------------------------------------------
+  P1 Concurrency & Atomicity  5/8
+    [PASS] T1.1a  no invalid status codes in burst (only 200/201/409)
+    [FAIL] T1.1b  concurrent successes <= zone capacity (expected <= 7)  <-- created=25 rejected409=0
+    [PASS] T1.1c  zero double-bookings after 25-way race
+    [PASS] T1.1d  every success has a distinct table
+    [PASS] T1.2  DB file always parseable during concurrent writes (7249 polls)
+    [PASS] T1.3  no .tmp / .corrupt-* residue left in data/
+    [FAIL] T1.4a  89-min-later booking does NOT reuse same table  <-- undefined vs undefined
+    [FAIL] T1.4b  exactly +90:00 reuses the same table  <-- undefined vs undefined
+  P2 Input Validation  1/20
+    [FAIL] T2.1a  400 rejected: guests=0  <-- got HTTP 201
+    [FAIL] T2.1b  400 rejected: guests=-3  <-- got HTTP 201
+    [FAIL] T2.1c  400 rejected: guests=13  <-- got HTTP 201
+    [FAIL] T2.1d  400 rejected: guests=2.5 (non-integer)  <-- got HTTP 201
+    [FAIL] T2.1e  400 rejected: guests="4" (string)  <-- got HTTP 201
+    [FAIL] T2.1f  400 rejected: guests missing  <-- got HTTP 201
+    [FAIL] T2.2a  400 rejected: date in the past (IST)  <-- got HTTP 201
+    [FAIL] T2.2b  400 rejected: date 2026-02-30 (unreal)  <-- got HTTP 201
+    [FAIL] T2.2c  400 rejected: date 2026-13-05 (bad month)  <-- got HTTP 201
+    [FAIL] T2.2d  400 rejected: date missing  <-- got HTTP 201
+    [FAIL] T2.3a  400 rejected: time 25:99  <-- got HTTP 201
+    [FAIL] T2.3b  400 rejected: time 9:00 (unpadded)  <-- got HTTP 201
+    [FAIL] T2.3c  400 rejected: time 14:00:00  <-- got HTTP 201
+    [FAIL] T2.3d  400 rejected: time missing  <-- got HTTP 201
+    [FAIL] T2.4a  400 rejected: unknown outlet "mumbai"  <-- got HTTP 201
+    [FAIL] T2.4b  400 rejected: locationId missing  <-- got HTTP 201
+    [FAIL] T2.5a  400 rejected: name missing  <-- got HTTP 201
+    [FAIL] T2.5b  400 rejected: name empty string  <-- got HTTP 201
+    [FAIL] T2.6a  boundary accepted: guests=8 (largest table), notes=500 chars  <-- HTTP 201 
+    [PASS] T2.6b  today (IST) is accepted (not treated as past)
+  P3 Security (XSS / DoS)  0/8
+    [FAIL] T3.1a  XSS in name rejected at API layer  <-- HTTP 201 
+    [FAIL] T3.1b  XSS in notes rejected at API layer  <-- HTTP 201 
+    [FAIL] T3.1c  XSS in email rejected at API layer  <-- HTTP 201 
+    [FAIL] T3.1d  XSS in occasion rejected at API layer  <-- HTTP 201 
+    [FAIL] T3.1e  XSS in phone rejected at API layer  <-- HTTP 201 
+    [FAIL] T3.2  notes 501 chars rejected  <-- HTTP 201
+    [FAIL] T3.3  oversized payload rejected (413/400 or reset), nothing stored  <-- HTTP 201
+    [FAIL] T3.4  stored dataset contains no raw < > characters  <-- ,,,,
+  P4 State Machine  0/1
+    [FAIL] T4.0  setup: create probe reservation  <-- HTTP 201
+  P5 Allocation & 409  2/8
+    [FAIL] T5.1a  exhaustion: exactly 7 successes (zone capacity), rest 409  <-- ok=9 409=0
+    [FAIL] T5.1b  all allocated tables distinct  <-- ,,,,,,,,
+    [PASS] T5.1c  409 body carries a human reason
+    [FAIL] T5.1d  best-fit order: 4-seaters allocated before 6/8-seaters  <-- ,,,,,,,,
+    [FAIL] T5.2  seating=indoor allocates from indoor zone only  <-- undefined zone=undefined
+    [FAIL] T5.3  2 guests -> smallest table (2-seater)  <-- undefined undefined
+    [FAIL] T5.4a  12 guests at a max-8-seater outlet -> 409 (no table fits)  <-- HTTP 201 
+    [PASS] T5.5  odd-minute time (20:07) accepted for walk-ins (HH:MM rule, not slot list)
+  P6 SSE Realtime  4/4
+    [PASS] T6.1  SSE connected event received
+    [PASS] T6.2  POST triggers reservations:changed (action=created)
+    [PASS] T6.3  PATCH triggers reservations:changed (action=status_updated)
+    [PASS] T6.4  event payload list parity with GET
+  P7 Persistence  4/5
+    [PASS] T7.1  DB file valid JSON after churn
+    [PASS] T7.1b  no .tmp residue
+    [PASS] T7.2a  server survives corrupt DB (GET returns 200 + [])
+    [FAIL] T7.2b  corrupt file quarantined as .corrupt-* (data preserved)  <-- none
+    [PASS] T7.3  write after quarantine recreates clean DB
+  P8 IST Dates  2/6
+    [FAIL] T8.1a  date = yesterday(IST) rejected  <-- HTTP 201
+    [PASS] T8.1b  date = today(IST) accepted
+    [FAIL] T8.1c  stored date matches today(IST) byte-for-byte  <-- undefined vs 2026-10-18
+    [PASS] T8.2  late-evening IST walk-in accepted for today
+    [FAIL] T8.3  vite.config.js contains an IST-aware clock helper  <-- getTodayIST/offset marker MISSING
+    [FAIL] T8.4  vite.config.js: no raw UTC toISOString().split("T") date idiom  <-- found — UTC drift risk
+  P9 Reset Endpoint  0/3
+    [FAIL] T9.1  POST /api/v1/reservations/reset -> 200  <-- HTTP 404
+    [FAIL] T9.2  reset empties the dataset (was 4)  <-- now=4
+    [FAIL] T9.3  data file on disk is an empty array after reset  <-- len=4
+  P10 Static Audits  2/12
+    [FAIL] S10.1a  no prefilled value= on the password input  <-- value attribute present
+    [FAIL] S10.1b  no passcode literal rendered in manager.html  <-- "burger123" found in DOM markup
+    [FAIL] S10.2a  escapeHtml() defined in booking.js  <-- missing
+    [FAIL] S10.2b  escapeHtml applied in render modules (manager/main/thermal)  <-- 0/3 modules use it
+    [FAIL] S10.3a  client booking.js has getTodayIST()  <-- missing
+    [FAIL] S10.3b  client: no toISOString().split("T") UTC idiom left  <-- found — UTC drift risk
+    [FAIL] S10.4a  engine writes through a .tmp staging file  <-- missing
+    [FAIL] S10.4b  engine commits via rename (atomic)  <-- missing
+    [PASS] S10.4c  no direct records-write bypassing the atomic path
+    [PASS] S10.5  floor canvas sorts reservations before .find() (clock fix)
+    [FAIL] S10.6  no fire-and-forget fetch with empty catch in booking.js  <-- ghost-confirmation idiom found
+    [FAIL] S10.7  mutation functions gate on server result before local mirror  <-- no gate — local-first risk
+  U Client Module (booking.js)  1/1
+    [PASS] U0  booking.js imports under Node shims
+
+IMPROVEMENT REGISTER — VERIFICATION MATRIX
+------------------------------------------------------------------------------
+  I-01 [CRITICAL] Concurrent double-booking race (25 clients, one table)
+        fix: Server mutex + best-fit allocation + 90-min overlap check + 409
+        tests: T1.1a-d, T1.4a-b, T5.1a-d -> NO-COVERAGE
+  I-02 [CRITICAL] Non-atomic writes could corrupt data file
+        fix: tmp + rename atomic commit, always-parseable guarantee
+        tests: T1.2, T1.3, T7.1, T7.1b -> VERIFIED
+  I-03 [HIGH] No input validation (negative guests, past dates, 25:99)
+        fix: Server-side validation: guests 1-12, IST date, HH:MM, known outlet
+        tests: T2.1a-f, T2.2a-d, T2.3a-d, T2.4a-b, T2.5a-b, T2.6a-b -> NO-COVERAGE
+  I-04 [HIGH] PATCH accepted any status; terminal states could revive
+        fix: Status whitelist + legal transition map + timestamps
+        tests: T4.1a-d, T4.2a-d, T4.3a-d, T4.4a-d, T4.5a-b, T4.6, T4.7 -> NO-COVERAGE
+  I-05 [HIGH] Stored XSS via name/notes into innerHTML
+        fix: API rejects < > everywhere + notes 500 cap + escapeHtml on all render paths
+        tests: T3.1a-e, T3.2, T3.3, T3.4, S10.2a-b, U1a-c -> FAILED
+  I-06 [CRITICAL] Ghost confirmations (client wrote local first, swallowed errors)
+        fix: Server-first mutations; failure leaves local mirror untouched
+        tests: U3a-b, U4a-b, U5a-b, S10.6, S10.7 -> FAILED
+  I-07 [HIGH] Walk-ins bypassed collision checks entirely
+        fix: Walk-ins go through the same server allocator
+        tests: T5.5, T4.5a-b, T8.2 -> NO-COVERAGE
+  I-08 [MEDIUM] UTC/IST date drift 00:00-05:30 IST
+        fix: getTodayIST() on server + client; UTC idiom removed
+        tests: T8.1a-c, T8.2, T8.3, T8.4, S10.3a-b, U2 -> FAILED
+  I-09 [HIGH] Phone last-4 verification bypass on empty phone
+        fix: Empty stored phone now fails verification
+        tests: U6a-c -> NO-COVERAGE
+  I-10 [MEDIUM] Hardcoded passcode prefilled in the DOM
+        fix: value attribute removed, disclosure text removed, Auto-Fill kept
+        tests: S10.1a-b -> NO-COVERAGE
+  I-11 [MEDIUM] No clean way to reset state between test runs
+        fix: POST /api/v1/reservations/reset test endpoint
+        tests: T9.1, T9.2, T9.3 -> FAILED
+  I-12 [HIGH] Floor-plan clock picked wrong reservation (unsorted find)
+        fix: Sort by time before find; corrupt DB quarantined not wiped
+        tests: S10.5, T7.2a-b, T7.3 -> NO-COVERAGE
+
+GO-ONLINE READINESS
+------------------------------------------------------------------------------
+  VERDICT: FAIL — 55 case(s) failed. Fix before going online:
+    - T1.1b concurrent successes <= zone capacity (expected <= 7) :: created=25 rejected409=0
+    - T1.4a 89-min-later booking does NOT reuse same table :: undefined vs undefined
+    - T1.4b exactly +90:00 reuses the same table :: undefined vs undefined
+    - T2.1a 400 rejected: guests=0 :: got HTTP 201
+    - T2.1b 400 rejected: guests=-3 :: got HTTP 201
+    - T2.1c 400 rejected: guests=13 :: got HTTP 201
+    - T2.1d 400 rejected: guests=2.5 (non-integer) :: got HTTP 201
+    - T2.1e 400 rejected: guests="4" (string) :: got HTTP 201
+    - T2.1f 400 rejected: guests missing :: got HTTP 201
+    - T2.2a 400 rejected: date in the past (IST) :: got HTTP 201
+    - T2.2b 400 rejected: date 2026-02-30 (unreal) :: got HTTP 201
+    - T2.2c 400 rejected: date 2026-13-05 (bad month) :: got HTTP 201
+    - T2.2d 400 rejected: date missing :: got HTTP 201
+    - T2.3a 400 rejected: time 25:99 :: got HTTP 201
+    - T2.3b 400 rejected: time 9:00 (unpadded) :: got HTTP 201
+    - T2.3c 400 rejected: time 14:00:00 :: got HTTP 201
+    - T2.3d 400 rejected: time missing :: got HTTP 201
+    - T2.4a 400 rejected: unknown outlet "mumbai" :: got HTTP 201
+    - T2.4b 400 rejected: locationId missing :: got HTTP 201
+    - T2.5a 400 rejected: name missing :: got HTTP 201
+
+  Pre-deployment checklist (manual, for the "make it online" phase):
+    1. Gate or remove POST /api/v1/reservations/reset behind an admin token in production.
+    2. Replace the client-side staff passcode with real server-side auth for the manager portal.
+    3. Serve over HTTPS and set Access-Control-Allow-Origin to the real origin.
+    4. Schedule backups of data/reservations.json (it is the system of record).
+    5. Keep body-size caps (64KB) and validation limits as deployed.
+    6. Re-run this suite after every deploy: node scripts/final-test.mjs --url <prod-url>
+
+Note: run window sensitivity — P8 IST-boundary cases are most meaningful
+when the suite runs between 00:00 and 05:30 IST (the old UTC-drift window).
+==============================================================================

@@ -1,0 +1,91 @@
+THE BURGER FACTORY - FINAL TEST REPORT
+======================================================================
+Run at: 2026-10-18T04:35:36.932Z
+
+[PASS] Client <-> server contract test (exit 0)
+----------------------------------------------------------------------
+PASS  card numbers match tables (anjuna)
+PASS  card numbers match tables (morjim)
+PASS  card numbers match tables (dona-paula)
+PASS  card numbers match tables (panaji)
+PASS  card numbers match tables (vagator)
+PASS  card numbers match tables (nerul)
+PASS  card numbers match tables (delhi)
+PASS  Panaji has no 22:00 slot (closes 10 PM)
+PASS  Delhi offers 12:00 (opens at noon)
+PASS  slot grid follows outlet hours
+PASS  anonymous sync works and holds no guest data
+PASS  online booking succeeds
+PASS  server (not browser) chose the table
+PASS  guest data NOT stored in shared browser cache
+PASS  double tap returns the SAME booking (no second table)
+PASS  slot after closing is refused
+PASS  lookup with wrong digits fails
+PASS  lookup with right digits shows the booking
+PASS  cancel with wrong digits fails
+PASS  guest cannot mark own booking completed (staff action)
+PASS  cancel with right digits works
+PASS  lookup now shows cancelled
+PASS  staff login with wrong passcode fails
+PASS  staff login works
+PASS  staff walk-in works
+PASS  staff sees full records
+PASS  staff can complete a booking
+PASS  completed cannot be re-seated
+PASS  logout clears token and cached guest data
+PASS  expired/forged token triggers re-login
+PASS  walk-in without login is refused
+
+31/31 checks passed
+
+
+[PASS] 7-day concurrent simulation + security probes (exit 0)
+----------------------------------------------------------------------
+LIFECYCLE
+  cancelled 199 (wrong-phone retries 19) | no-show 135 | seated 1355 | completed 1667
+  late arrivals after no-show 7 | arrivals blocked by overstay 139 | walkouts 14
+WALK-INS
+  seated 319 | turned away 55
+NETWORK
+  requests dropped by fault injector 22
+
+PER-OUTLET (covers served, table utilisation of service hours 12:30-22:30)
+  anjuna      tables 18  covers  1095  utilisation 28.0%
+  morjim      tables 20  covers  1212  utilisation 27.3%
+  vagator     tables 14  covers   782  utilisation 24.9%
+  nerul       tables 10  covers   490  utilisation 21.6%
+  dona-paula  tables 12  covers   504  utilisation 18.8%
+  panaji      tables 16  covers   808  utilisation 21.2%
+  delhi       tables 20  covers  1098  utilisation 23.8%
+
+LATENCY (ms) / PAYLOAD
+  GET /api/v1/reservations             n=  4528  p50=  10  p95=  66  p99= 136  max=  361  avg bytes=283554
+  POST /api/v1/staff/login             n=     7  p50=   1  p95=   8  p99=   8  max=    8  avg bytes=60
+  POST /api/v1/reservations            n=  2075  p50=   9  p95=  37  p99=  62  max=  154  avg bytes=440
+  POST /api/v1/reservations/lookup     n=   164  p50=   6  p95=  28  p99=  68  max=  311  avg bytes=404
+  PATCH /api/v1/reservations/status    n=  3396  p50=  12  p95=  53  p99=  91  max=  255  avg bytes=468
+  POST /api/v1/reservations/reset      n=     1  p50=   6  p95=   6  p99=   6  max=    6  avg bytes=48
+
+GET /reservations GROWTH BY VIRTUAL DAY
+  day  1  calls  1029  p95   22 ms  median payload 26 KB
+  day  2  calls   534  p95   22 ms  median payload 34 KB
+  day  3  calls   440  p95   25 ms  median payload 43 KB
+  day  4  calls   420  p95   31 ms  median payload 46 KB
+  day  5  calls   466  p95   39 ms  median payload 47 KB
+  day  6  calls   753  p95  109 ms  median payload 41 KB
+  day  7  calls   884  p95  112 ms  median payload 870 KB
+  day  8  calls     2  p95   17 ms  median payload 953 KB
+
+SSE LISTENERS (simulated manager tablets / customer pages)
+  manager-tablet-1 connected=true events=5372 (server accepted 5369 broadcasting writes) avg 0 KB/event, max 0 KB
+  manager-tablet-2 connected=true events=5372 (server accepted 5369 broadcasting writes) avg 0 KB/event, max 0 KB
+  customer-page    connected=true events=5372 (server accepted 5369 broadcasting writes) avg 0 KB/event, max 0 KB
+
+FINDING COUNTS: OVERSTAY_BLOCKS_ARRIVAL=139
+
+FINDINGS: 0 critical, 0 error, 0 warn, 139 info
+Reports in /home/claude/final/sim_logs/run-2026-10-18T04-35-37-seed42
+
+
+======================================================================
+OVERALL VERDICT: PASS - safe to deploy

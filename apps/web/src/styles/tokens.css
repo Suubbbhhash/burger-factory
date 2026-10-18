@@ -1,0 +1,83 @@
+/* ============================================
+   THE BURGER FACTORY — DESIGN TOKENS
+   Coastal Goa Shack · Butcher Paper · Cast Iron
+   ============================================ */
+
+:root {
+  /* Warm Paper & Cast-Iron Palette */
+  --paper: #F6EFE5;
+  --paper-deep: #ECE2D2;
+  --paper-card: #FAF6F0;
+  --paper-surface: #FFFFFF;
+  --parchment: #F3EDE2;
+  --parchment-ink: #1C1713;
+
+  /* Ink Typographic Palette */
+  --ink: #1C1713;
+  --ink-soft: #5A4E43;
+  --ink-muted: #827668;
+  --ink-faint: rgba(28, 23, 19, 0.08);
+
+  /* Culinary Accent Palette */
+  --ketchup: #D63B27;
+  --ketchup-dark: #B52B18;
+  --mustard: #E8A824;
+  --mustard-light: #F4BA3D;
+  --sea: #1D5B58;
+  --sea-light: #2A7975;
+  --leaf: #2A7B39;
+  --leaf-tint: rgba(42, 123, 57, 0.12);
+  --charcoal: #12100E;
+
+  /* Tactical Lines & Hard Shadows */
+  --line-width: 1.5px;
+  --line: 1.5px solid var(--ink);
+  --line-soft: 1px solid rgba(28, 23, 19, 0.14);
+  --line-strong: 2px solid var(--ink);
+  --line-dashed: 2px dashed rgba(28, 23, 19, 0.25);
+  
+  --radius-xs: 4px;
+  --radius: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 9999px;
+
+  /* Hard Offset "Printed" Shadows (Zero blur) */
+  --shadow-hard-xs: 2px 2px 0 var(--ink);
+  --shadow-hard-sm: 3px 3px 0 var(--ink);
+  --shadow-hard: 4px 4px 0 var(--ink);
+  --shadow-hard-lg: 6px 6px 0 var(--ink);
+  --shadow-hard-ketchup: 4px 4px 0 var(--ketchup-dark);
+  --shadow-pressed: 1px 1px 0 var(--ink);
+
+  /* Typography Stack */
+  --font-display: 'Bricolage Grotesque', -apple-system, sans-serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Fluid Type Scale */
+  --step--2: clamp(0.72rem, 0.7rem + 0.1vw, 0.8rem);
+  --step--1: clamp(0.82rem, 0.8rem + 0.1vw, 0.9rem);
+  --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  --step-1: clamp(1.15rem, 1.1rem + 0.35vw, 1.35rem);
+  --step-2: clamp(1.4rem, 1.3rem + 0.6vw, 1.75rem);
+  --step-3: clamp(1.8rem, 1.6rem + 1.1vw, 2.35rem);
+  --step-4: clamp(2.3rem, 1.9rem + 2vw, 3.25rem);
+  --step-5: clamp(2.9rem, 2.3rem + 3.2vw, 4.5rem);
+  --step-hero: clamp(3.2rem, 2.5rem + 4.5vw, 5.8rem);
+
+  /* Spacing Scale */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
+  --space-2xl: 4.5rem;
+  --space-3xl: 6rem;
+
+  /* Transitions */
+  --transition-fast: 120ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-base: 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}

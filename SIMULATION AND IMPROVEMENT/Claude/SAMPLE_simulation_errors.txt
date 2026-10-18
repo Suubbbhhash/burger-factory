@@ -1,0 +1,427 @@
+BURGER FACTORY SIMULATION - ERROR REPORT
+==============================================================================
+Run finished : 2026-10-17T13:46:37.286Z  (wall time 85 s)
+Reproduce    : node tools/simulate.mjs --spawn --days 4 --seed 42 --scale 1 --rush 60 --race-ms 4 --drop 0.004 --start 2026-10-17
+Virtual span : 4 days from 2026-10-17 against http://127.0.0.1:3100
+
+TOTALS: 14 critical, 12 error, 11 warning, 188 info  (distinct findings logged; raw counts per category below)
+
+HOW TO USE THIS FILE
+  1. Fix top-to-bottom: CRITICAL first. Each category has: likely cause, files to open, suggested fix.
+  2. Re-run with the SAME --seed after fixing; the customer plan is identical, so a fixed bug disappears from this file.
+  3. simulation_events.txt has the full minute-by-minute story; search it for a booking code or the "#id" of a finding.
+
+FINDINGS BY CATEGORY
+------------------------------------------------------------------------------
+[CRITICAL] DOUBLE_BOOKING - 7 occurrence(s), first at D01 Sat 23:59
+  Likely cause : Availability is checked in the browser, then the result is POSTed. Two phones can both see the same table as free. The dev server (vite.config.js, POST /api/v1/reservations) appends whatever it receives; in production the findFirst-then-create in reservation.routes.ts runs at READ COMMITTED so two transactions can still both pass, and schema.prisma enables btree_gist but never declares the exclusion constraint.
+  Where to look: vite.config.js POST handler; src/js/booking.js createReservation(); apps/api/src/modules/reservations/reservation.routes.ts ($transaction); prisma schema/migrations
+  Suggested fix: Let the SERVER choose the table inside a lock/transaction. In Postgres add: ALTER TABLE reservations ADD CONSTRAINT no_table_overlap EXCLUDE USING gist (table_id WITH =, tstzrange(starts_at, ends_at) WITH &&) WHERE (status IN ('CONFIRMED','SEATED')); catch SQLSTATE 23P01 and retry the next candidate table. In the dev server add an async mutex and re-run checkAvailability() before pushing. Disable the Confirm button after first tap and send an idempotency key.
+[CRITICAL] GHOST_CONFIRMATION - 4 occurrence(s), first at D01 Sat 23:59
+  Likely cause : The client wraps every fetch in try { ... } catch {} and shows success regardless, so a dropped/failed request still produces a confirmation screen and a booking code that the restaurant never received.
+  Where to look: src/js/booking.js createReservation / createWalkInReservation / cancelReservation / updateReservationStatus (all "catch {}")
+  Suggested fix: Show the confirmation only after a 201 from the server; on failure show an error + retry; keep an outbox with retry/backoff for the host tablet; never write to localStorage before the server acknowledges.
+[CRITICAL] SERVER_NO_CONFLICT_CHECK - 1 occurrence(s), first at D01 Sat 13:33
+  Likely cause : The server trusts the client completely and never validates overlap.
+  Where to look: vite.config.js POST /api/v1/reservations
+  Suggested fix: Move checkAvailability() into the server handler and return 409 on conflict; client should re-fetch and offer another slot.
+[CRITICAL] SECURITY_NO_AUTH - 1 occurrence(s), first at D01 Sat 13:33
+  Likely cause : Mutation endpoints have no authentication. The passcode "burger123" is in client JS; phone-last-4 verification is performed in the browser only. In the Fastify API only /auth/me calls jwtVerify; floor routes (/walkin, status PATCH, /events, /manifest) have no preHandler.
+  Where to look: vite.config.js; apps/api/src/modules/floor/floor.routes.ts; src/js/manager.js passcode gate
+  Suggested fix: Add a Fastify preHandler (request.jwtVerify + role check) to the floor plugin; verify phoneLast4 server-side for guest cancel/lookup (already done in /reservations/cancel); remove hard-coded passcodes from shipped JS.
+[CRITICAL] SECURITY_PII_EXPOSURE - 1 occurrence(s), first at D01 Sat 13:33
+  Likely cause : GET /api/v1/reservations returns the full reservation table (names, phones, emails) to anybody, because the browser needs it to compute availability.
+  Where to look: vite.config.js GET handler; booking.js syncReservationsFromServer
+  Suggested fix: Expose only an /availability endpoint (anonymous) and a staff-only list; never ship other guests' PII to a customer browser.
+[ERROR] LOST_UPDATE - 7 occurrence(s), first at D01 Sat 23:59
+  Likely cause : Same swallowed-error pattern for status changes: the UI updates localStorage first, the PATCH may fail silently, and the next sync reverts the screen.
+  Where to look: src/js/booking.js updateReservationStatus / cancelReservation
+  Suggested fix: Update UI only after the server replies; surface failures to the host; add If-Match/version (or updatedAt) to PATCH to detect stale writes.
+[ERROR] SERVER_ACCEPTS_INVALID - 3 occurrence(s), first at D01 Sat 13:33
+  Likely cause : The dev server stores payload.reservation unvalidated and even returns 201 for an empty body.
+  Where to look: vite.config.js POST handler
+  Suggested fix: Reuse packages/shared zod schemas (createReservationSchema) in the dev middleware; return 400/409/422 properly.
+[ERROR] STATE_MACHINE - 2 occurrence(s), first at D01 Sat 13:33
+  Likely cause : No status transition rules on the server.
+  Where to look: vite.config.js PATCH handler; apps/api floor.routes.ts PATCH /reservations/:code/status
+  Suggested fix: Whitelist transitions: confirmed->seated|cancelled|no-show, seated->completed, no-show->seated (reinstate). completed/cancelled are terminal. Validate status against the enum.
+[WARN] DATA_INCONSISTENT - 7 occurrence(s), first at D01 Sat 00:00
+  Likely cause : Different parts of the code disagree on facts about the restaurant (e.g. declared seats vs real table sizes).
+  Where to look: data.js locations[] vs locationTables; docs
+  Suggested fix: Derive counts from one source of truth.
+[WARN] HOURS_VIOLATION - 4 occurrence(s), first at D01 Sat 00:00
+  Likely cause : TIME_SLOTS is one global list (12:30-22:00) but outlets have different hours (e.g. Panaji/Nerul close 10:00 PM, Delhi opens 12:00 and closes 11:00 PM).
+  Where to look: booking.js TIME_SLOTS; packages/shared/constants.ts; data.js locations[].hours
+  Suggested fix: Generate slots per outlet from its hours; make the last seating = close - turn time.
+[WARN] SSE_PAYLOAD_O_N - 1 occurrence(s), first at D05 Wed 06:00
+  Likely cause : Each SSE event carries the entire reservations array (O(n) per event x number of connected screens).
+  Where to look: vite.config.js broadcastSse payload
+  Suggested fix: Broadcast {action, reservation} only; clients patch their local state.
+[INFO] OVERSTAY_BLOCKS_ARRIVAL - 187 occurrence(s), first at D01 Sat 14:03
+  Likely cause : TURN_MINUTES is fixed at 90 for every party, but real dwell times vary (sim: ~66 +/- 18 min; calibrate to your real data). When a party overstays, the next booking arrives to an occupied table and there is no table-reassign endpoint or waitlist.
+  Where to look: booking.js TURN_MINUTES; manager.js seat flow
+  Suggested fix: Duration by party size, buffer time, a "move to another table" action, and a waitlist/ETA display for hosts.
+
+DETAILED EXAMPLES (first 3 per category)
+==============================================================================
+
+### DOUBLE_BOOKING  (7 total)
+
+#95 [CRITICAL] D01 Sat 23:59  actor=oracle  action=audit end of D01 Sat 23:59
+  BF-Y7LFR4 (20:00) and BF-3K26HR (20:00) both hold PNJ-I9 on 2026-10-20 at panaji; created 2 ms apart; SAME GUEST (double-submit) => classic race
+  request : [{"code":"BF-Y7LFR4","name":"Nikhil Desai","phone":"+91 63762 46422","loc":"panaji","date":"2026-10-20","time":"20:00","guests":5,"table":"PNJ-I9","status":"confirmed","createdAt":"2026-10-17T13:45:13.916Z"},{"code":"BF-3K26HR","name":"Nikhil Desai","phone":"+91 63762 46422","loc":"panaji","date":"2026-10-20","time":"20:00","guests":5,"table":"PNJ-I9","status":"confirmed","createdAt":"2026-10-17T13:45:13.918Z"}]
+
+#96 [CRITICAL] D01 Sat 23:59  actor=oracle  action=audit end of D01 Sat 23:59
+  BF-FCEXH8 (19:30) and BF-W48BPS (19:30) both hold MOR-I4 on 2026-10-18 at morjim; created 2 ms apart; SAME GUEST (double-submit) => classic race
+  request : [{"code":"BF-FCEXH8","name":"Riya Naik","phone":"+91 92832 73912","loc":"morjim","date":"2026-10-18","time":"19:30","guests":4,"table":"MOR-I4","status":"confirmed","createdAt":"2026-10-17T13:45:14.400Z"},{"code":"BF-W48BPS","name":"Riya Naik","phone":"+91 92832 73912","loc":"morjim","date":"2026-10-18","time":"19:30","guests":4,"table":"MOR-I4","status":"confirmed","createdAt":"2026-10-17T13:45:14.402Z"}]
+
+#97 [CRITICAL] D01 Sat 23:59  actor=oracle  action=audit end of D01 Sat 23:59
+  BF-FY4B6C (18:30) and BF-HVEFRW (18:30) both hold PNJ-I1 on 2026-10-19 at panaji; created 6 ms apart; SAME GUEST (double-submit) => classic race
+  request : [{"code":"BF-FY4B6C","name":"Arjun Mehta","phone":"+91 98872 62135","loc":"panaji","date":"2026-10-19","time":"18:30","guests":2,"table":"PNJ-I1","status":"confirmed","createdAt":"2026-10-17T13:45:30.614Z"},{"code":"BF-HVEFRW","name":"Arjun Mehta","phone":"+91 98872 62135","loc":"panaji","date":"2026-10-19","time":"18:30","guests":2,"table":"PNJ-I1","status":"confirmed","createdAt":"2026-10-17T13:45:30.620Z"}]
+
+### GHOST_CONFIRMATION  (4 total)
+
+#100 [CRITICAL] D01 Sat 23:59  actor=cust:Arjun DSouza  action=audit
+  BF-LDW4CP was confirmed to the guest/host but is missing on the server (client swallows network errors)
+  request : {"id":"BF-LDW4CP","code":"BF-LDW4CP","name":"Arjun DSouza","email":"","phone":"+91 91257 44896","locationId":"vagator","locationName":"Vagator, Bardez, Goa","date":"2026-10-17","time":"18:30","guests":2,"seating":"outdoor","occasion":"","notes":"","tableId":"VAG-O1","tableLabel":"VAG-O1","tableType":"2-seater","tableZone":"outdoor","status":"confirmed","createdAt":"2026-10-17T13:45:15.844Z"}
+  response: [{"vt":"D01 Sat 13:42","min":822,"actor":"cust:Arjun DSouza","status":"confirmed","http":0},{"vt":"D01 Sat 18:40","min":1120,"actor":"host","status":"cancelled","http":404}]
+
+#102 [CRITICAL] D01 Sat 23:59  actor=cust:Riya Naik  action=audit
+  BF-79YCRC was confirmed to the guest/host but is missing on the server (client swallows network errors)
+  request : {"id":"BF-79YCRC","code":"BF-79YCRC","name":"Riya Naik","email":"guest45060@example.com","phone":"+91 87891 47308","locationId":"panaji","locationName":"Panaji (La Citadel), Central Goa","date":"2026-10-17","time":"15:30","guests":3,"seating":"indoor","occasion":"","notes":"","tableId":"PNJ-I4","tableLabel":"PNJ-I4","tableType":"4-seater","tableZone":"indoor","status":"confirmed","createdAt":"2026-10-17T13:45:16.522Z"}
+  response: [{"vt":"D01 Sat 14:18","min":858,"actor":"cust:Riya Naik","status":"confirmed","http":0},{"vt":"D01 Sat 15:28","min":928,"actor":"host","status":"seated","http":404},{"vt":"D01 Sat 16:22","min":982,"actor":"host","status":"completed","http":404}]
+
+#104 [CRITICAL] D01 Sat 23:59  actor=cust:Rohan Gupta  action=audit
+  BF-R3N2QV was confirmed to the guest/host but is missing on the server (client swallows network errors)
+  request : {"id":"BF-R3N2QV","code":"BF-R3N2QV","name":"Rohan Gupta","email":"guest69203@example.com","phone":"+91 74682 67418","locationId":"nerul","locationName":"Nerul, North Goa","date":"2026-10-17","time":"19:00","guests":3,"seating":"indoor","occasion":"","notes":"","tableId":"NER-I5","tableLabel":"NER-I5","tableType":"4-seater","tableZone":"indoor","status":"confirmed","createdAt":"2026-10-17T13:45:25.250Z"}
+  response: [{"vt":"D01 Sat 18:41","min":1121,"actor":"cust:Rohan Gupta","status":"confirmed","http":0},{"vt":"D01 Sat 19:21","min":1161,"actor":"host","status":"cancelled","http":404}]
+
+### SERVER_NO_CONFLICT_CHECK  (1 total)
+
+#13 [CRITICAL] D01 Sat 13:33  actor=prober  action=POST duplicate of BF-ZNXDCP
+  server accepted a 2nd booking for PNJ-I2 2026-10-17 13:00 which is already held by BF-ZNXDCP; only the browser prevents double-booking
+  request : {"id":"PROBE-46863","code":"PROBE-46863","name":"__SIM_PROBE__","email":"","phone":"+91 90000 00000","locationId":"panaji","locationName":"Anjuna","date":"2026-10-17","time":"13:00","guests":2,"seating":"any","occasion":"","notes":"","tableId":"PNJ-I2","tableLabel":"PNJ-I2","tableType":"2-seater","tableZone":"indoor","status":"confirmed","createdAt":"2026-10-17T13:45:15.667Z"}
+  response: HTTP 201 {success:true,reservations:[189 records]}
+
+### SECURITY_NO_AUTH  (1 total)
+
+#14 [CRITICAL] D01 Sat 13:33  actor=prober  action=PATCH status with no credentials/phone
+  any unauthenticated caller can change any booking status; the staff passcode and the phone-last-4 check exist only in browser JavaScript
+  request : {"code":"PROBE-22537","status":"completed"}
+  response: HTTP 200 {success:true,reservations:[190 records]}
+
+### SECURITY_PII_EXPOSURE  (1 total)
+
+#17 [CRITICAL] D01 Sat 13:33  actor=prober  action=GET /api/v1/reservations (anonymous)
+  anonymous GET returns name+phone+email of all 190 bookings; every customer phone downloads every other customer's data
+  response: {"id":"BF-BHZYKL","code":"BF-BHZYKL","name":"Aditya Fernandes","email":"guest40018@example.com","phone":"+91 63117 11904","locationId":"delhi","locationName":"New Delhi, Greater Kailash","date":"2026-10-17","time":"13:00","guests":2,"seating":"outdoor","occasion":"","notes":"","tableId":"DEL-R1","ta...(+159 chars)
+
+### LOST_UPDATE  (7 total)
+
+#99 [ERROR] D01 Sat 23:59  actor=oracle  action=audit end of D01 Sat 23:59
+  BF-553HZG: UI/host was told "completed" but server says "seated"
+  request : {"code":"BF-553HZG","name":"Meera Prabhu","phone":"+91 88028 26841","loc":"delhi","date":"2026-10-17","time":"12:30","guests":3,"table":"DEL-I7","status":"seated","createdAt":"2026-10-17T13:45:14.344Z"}
+  response: writers=[{"vt":"D01 Sat 11:39","min":699,"actor":"cust:Meera Prabhu","status":"confirmed","http":201},{"vt":"D01 Sat 12:33","min":753,"actor":"host","status":"seated","http":200},{"vt":"D01 Sat 14:06","min":846,"actor":"host","status":"completed","http":0}]
+
+#101 [ERROR] D01 Sat 23:59  actor=oracle  action=audit end of D01 Sat 23:59
+  BF-NRF527: UI/host was told "completed" but server says "seated"
+  request : {"code":"BF-NRF527","name":"Tanvi Kapoor","phone":"+91 96486 15558","loc":"anjuna","date":"2026-10-17","time":"19:00","guests":6,"table":"ANJ-O7","status":"seated","createdAt":"2026-10-17T13:45:16.481Z"}
+  response: writers=[{"vt":"D01 Sat 14:14","min":854,"actor":"cust:Tanvi Kapoor","status":"confirmed","http":201},{"vt":"D01 Sat 19:13","min":1153,"actor":"host","status":"seated","http":200},{"vt":"D01 Sat 20:49","min":1249,"actor":"host","status":"completed","http":0}]
+
+#103 [ERROR] D01 Sat 23:59  actor=oracle  action=audit end of D01 Sat 23:59
+  BF-R77SW5: UI/host was told "completed" but server says "seated"
+  request : {"code":"BF-R77SW5","name":"Neha Iyer","phone":"+91 92931 13063","loc":"panaji","date":"2026-10-17","time":"21:00","guests":4,"table":"PNJ-I4","status":"seated","createdAt":"2026-10-17T13:45:23.869Z"}
+  response: writers=[{"vt":"D01 Sat 18:07","min":1087,"actor":"cust:Neha Iyer","status":"confirmed","http":201},{"vt":"D01 Sat 20:56","min":1256,"actor":"host","status":"seated","http":200},{"vt":"D01 Sat 22:02","min":1322,"actor":"host","status":"completed","http":0}]
+
+### SERVER_ACCEPTS_INVALID  (3 total)
+
+#11 [ERROR] D01 Sat 13:33  actor=prober  action=POST garbage reservation
+  server stored a booking with guests=-5, date in 1999, unknown outlet, bad phone, empty name (should be 400)
+  request : {"id":"PROBE-57508","code":"PROBE-57508","name":"","email":"","phone":"abc","locationId":"atlantis","locationName":"Anjuna","date":"1999-01-01","time":"19:00","guests":-5,"seating":"any","occasion":"","notes":"","tableId":"ANJ-I1","tableLabel":"ANJ-I1","tableType":"2-seater","tableZone":"indoor","status":"confirmed","createdAt":"2026-10-17T13:45:15.653Z"}
+  response: HTTP 201 {success:true,reservations:[188 records]}
+
+#12 [ERROR] D01 Sat 13:33  actor=prober  action=POST {}
+  POST with an empty body returns 201 success:true although nothing was saved (clients will believe it worked)
+  request : {}
+  response: HTTP 201 {success:true,reservations:[188 records]}
+
+#224 [ERROR] D05 Wed 06:00  actor=prober  action=-
+  server accepted a 1 MB "notes" field (schema says max 300 chars; no body-size limit => trivial DoS / DB bloat)
+  response: HTTP 201 {success:true,reservations:[1222 records]}
+
+### STATE_MACHINE  (2 total)
+
+#15 [ERROR] D01 Sat 13:33  actor=prober  action=completed -> seated
+  server allows resurrecting a COMPLETED booking (terminal states are not enforced)
+  request : {"code":"PROBE-22537","status":"seated"}
+
+#16 [ERROR] D01 Sat 13:33  actor=prober  action=status=banana
+  server accepts arbitrary status strings (no enum validation)
+  request : {"code":"PROBE-22537","status":"banana"}
+
+### DATA_INCONSISTENT  (7 total)
+
+#1 [WARN] D01 Sat 00:00  actor=static  action=-
+  anjuna: card says 18 tables / 72 seats, but locationTables has 18 tables / 76 seats
+
+#2 [WARN] D01 Sat 00:00  actor=static  action=-
+  morjim: card says 20 tables / 88 seats, but locationTables has 20 tables / 90 seats
+
+#3 [WARN] D01 Sat 00:00  actor=static  action=-
+  dona-paula: card says 12 tables / 48 seats, but locationTables has 12 tables / 52 seats
+
+### HOURS_VIOLATION  (4 total)
+
+#5 [WARN] D01 Sat 00:00  actor=static  action=-
+  panaji closes 22:00 but the last bookable slot is 22:00 (a party seated then eats 90 min after closing)
+
+#8 [WARN] D01 Sat 00:00  actor=static  action=-
+  nerul closes 22:00 but the last bookable slot is 22:00 (a party seated then eats 90 min after closing)
+
+#10 [INFO] D01 Sat 00:00  actor=static  action=-
+  delhi hours 12:00-23:00 but slots only cover 12:30-22:00 (lost bookable time)
+
+### SSE_PAYLOAD_O_N  (1 total)
+
+#225 [WARN] D05 Wed 06:00  actor=manager-tablet-1  action=-
+  largest SSE event was 2530 KB (whole table sent on every change)
+
+### OVERSTAY_BLOCKS_ARRIVAL  (187 total)
+
+#18 [INFO] D01 Sat 14:03  actor=host  action=seat BF-HXUBZT
+  table DEL-I7 still occupied by BF-553HZG when BF-HXUBZT arrived (turn=90 min is a fixed assumption)
+
+#19 [INFO] D01 Sat 14:08  actor=host  action=seat BF-HXUBZT
+  table DEL-I7 still occupied by BF-553HZG when BF-HXUBZT arrived (turn=90 min is a fixed assumption)
+
+#20 [INFO] D01 Sat 14:13  actor=host  action=seat BF-HXUBZT
+  table DEL-I7 still occupied by BF-553HZG when BF-HXUBZT arrived (turn=90 min is a fixed assumption)
+
+
+FULL CHRONOLOGICAL FINDING LIST
+==============================================================================
+#0001 D01 Sat 00:00 [WARN] DATA_INCONSISTENT: anjuna: card says 18 tables / 72 seats, but locationTables has 18 tables / 76 seats
+#0002 D01 Sat 00:00 [WARN] DATA_INCONSISTENT: morjim: card says 20 tables / 88 seats, but locationTables has 20 tables / 90 seats
+#0003 D01 Sat 00:00 [WARN] DATA_INCONSISTENT: dona-paula: card says 12 tables / 48 seats, but locationTables has 12 tables / 52 seats
+#0004 D01 Sat 00:00 [WARN] DATA_INCONSISTENT: panaji: card says 16 tables / 64 seats, but locationTables has 16 tables / 86 seats
+#0005 D01 Sat 00:00 [WARN] HOURS_VIOLATION: panaji closes 22:00 but the last bookable slot is 22:00 (a party seated then eats 90 min after closing)
+#0006 D01 Sat 00:00 [WARN] DATA_INCONSISTENT: vagator: card says 14 tables / 56 seats, but locationTables has 14 tables / 60 seats
+#0007 D01 Sat 00:00 [WARN] DATA_INCONSISTENT: nerul: card says 10 tables / 40 seats, but locationTables has 10 tables / 48 seats
+#0008 D01 Sat 00:00 [WARN] HOURS_VIOLATION: nerul closes 22:00 but the last bookable slot is 22:00 (a party seated then eats 90 min after closing)
+#0009 D01 Sat 00:00 [WARN] DATA_INCONSISTENT: delhi: card says 20 tables / 80 seats, but locationTables has 20 tables / 88 seats
+#0010 D01 Sat 00:00 [INFO] HOURS_VIOLATION: delhi hours 12:00-23:00 but slots only cover 12:30-22:00 (lost bookable time)
+#0011 D01 Sat 13:33 [ERROR] SERVER_ACCEPTS_INVALID: server stored a booking with guests=-5, date in 1999, unknown outlet, bad phone, empty name (should be 400)
+#0012 D01 Sat 13:33 [ERROR] SERVER_ACCEPTS_INVALID: POST with an empty body returns 201 success:true although nothing was saved (clients will believe it worked)
+#0013 D01 Sat 13:33 [CRITICAL] SERVER_NO_CONFLICT_CHECK: server accepted a 2nd booking for PNJ-I2 2026-10-17 13:00 which is already held by BF-ZNXDCP; only the browser prevents double-booking
+#0014 D01 Sat 13:33 [CRITICAL] SECURITY_NO_AUTH: any unauthenticated caller can change any booking status; the staff passcode and the phone-last-4 check exist only in browser JavaScript
+#0015 D01 Sat 13:33 [ERROR] STATE_MACHINE: server allows resurrecting a COMPLETED booking (terminal states are not enforced)
+#0016 D01 Sat 13:33 [ERROR] STATE_MACHINE: server accepts arbitrary status strings (no enum validation)
+#0017 D01 Sat 13:33 [CRITICAL] SECURITY_PII_EXPOSURE: anonymous GET returns name+phone+email of all 190 bookings; every customer phone downloads every other customer's data
+#0018 D01 Sat 14:03 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-HXUBZT arrived (turn=90 min is a fixed assumption)
+#0019 D01 Sat 14:08 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-HXUBZT arrived (turn=90 min is a fixed assumption)
+#0020 D01 Sat 14:13 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-HXUBZT arrived (turn=90 min is a fixed assumption)
+#0021 D01 Sat 14:18 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-HXUBZT arrived (turn=90 min is a fixed assumption)
+#0022 D01 Sat 14:23 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-HXUBZT arrived (turn=90 min is a fixed assumption)
+#0023 D01 Sat 18:20 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-O1 still occupied by BF-FR98F3 when BF-LDW4CP arrived (turn=90 min is a fixed assumption)
+#0024 D01 Sat 18:25 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-O1 still occupied by BF-FR98F3 when BF-LDW4CP arrived (turn=90 min is a fixed assumption)
+#0025 D01 Sat 18:30 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-O1 still occupied by BF-FR98F3 when BF-LDW4CP arrived (turn=90 min is a fixed assumption)
+#0026 D01 Sat 18:35 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-O1 still occupied by BF-FR98F3 when BF-LDW4CP arrived (turn=90 min is a fixed assumption)
+#0027 D01 Sat 18:40 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-O1 still occupied by BF-FR98F3 when BF-LDW4CP arrived (turn=90 min is a fixed assumption)
+#0028 D01 Sat 19:01 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table NER-I5 still occupied by BF-G6NSS5 when BF-R3N2QV arrived (turn=90 min is a fixed assumption)
+#0029 D01 Sat 19:06 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table NER-I5 still occupied by BF-G6NSS5 when BF-R3N2QV arrived (turn=90 min is a fixed assumption)
+#0030 D01 Sat 19:11 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table NER-I5 still occupied by BF-G6NSS5 when BF-R3N2QV arrived (turn=90 min is a fixed assumption)
+#0031 D01 Sat 19:16 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table NER-I5 still occupied by BF-G6NSS5 when BF-R3N2QV arrived (turn=90 min is a fixed assumption)
+#0032 D01 Sat 19:16 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I3 still occupied by BF-4RSZES when BF-MXGM6J arrived (turn=90 min is a fixed assumption)
+#0033 D01 Sat 19:21 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table NER-I5 still occupied by BF-G6NSS5 when BF-R3N2QV arrived (turn=90 min is a fixed assumption)
+#0034 D01 Sat 19:21 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I3 still occupied by BF-4RSZES when BF-MXGM6J arrived (turn=90 min is a fixed assumption)
+#0035 D01 Sat 19:34 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I4 still occupied by BF-8TR86E when BF-T47LBK arrived (turn=90 min is a fixed assumption)
+#0036 D01 Sat 19:39 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I4 still occupied by BF-8TR86E when BF-T47LBK arrived (turn=90 min is a fixed assumption)
+#0037 D01 Sat 19:44 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I4 still occupied by BF-8TR86E when BF-T47LBK arrived (turn=90 min is a fixed assumption)
+#0038 D01 Sat 19:49 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I4 still occupied by BF-8TR86E when BF-T47LBK arrived (turn=90 min is a fixed assumption)
+#0039 D01 Sat 19:54 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I4 still occupied by BF-8TR86E when BF-T47LBK arrived (turn=90 min is a fixed assumption)
+#0040 D01 Sat 20:03 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DP-O2 still occupied by BF-KY843N when BF-JTFMX5 arrived (turn=90 min is a fixed assumption)
+#0041 D01 Sat 20:04 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-B3 still occupied by BF-Q7KBQR when BF-GFFCAX arrived (turn=90 min is a fixed assumption)
+#0042 D01 Sat 20:07 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-7GDWT3 arrived (turn=90 min is a fixed assumption)
+#0043 D01 Sat 20:08 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DP-O2 still occupied by BF-KY843N when BF-JTFMX5 arrived (turn=90 min is a fixed assumption)
+#0044 D01 Sat 20:12 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-7GDWT3 arrived (turn=90 min is a fixed assumption)
+#0045 D01 Sat 20:17 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-7GDWT3 arrived (turn=90 min is a fixed assumption)
+#0046 D01 Sat 20:20 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I1 still occupied by BF-Z2LP6D when BF-AUNV23 arrived (turn=90 min is a fixed assumption)
+#0047 D01 Sat 20:22 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-7GDWT3 arrived (turn=90 min is a fixed assumption)
+#0048 D01 Sat 20:27 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-7GDWT3 arrived (turn=90 min is a fixed assumption)
+#0049 D01 Sat 20:29 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I1 still occupied by BF-AUNV23 when BF-ZH759C arrived (turn=90 min is a fixed assumption)
+#0050 D01 Sat 20:30 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O3 still occupied by BF-JJJ87C when BF-GMNQSD arrived (turn=90 min is a fixed assumption)
+#0051 D01 Sat 20:32 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I6 still occupied by BF-45BTR8 when BF-SJNJDR arrived (turn=90 min is a fixed assumption)
+#0052 D01 Sat 20:33 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I3 still occupied by BF-MXGM6J when BF-T64JNN arrived (turn=90 min is a fixed assumption)
+#0053 D01 Sat 20:34 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I1 still occupied by BF-AUNV23 when BF-ZH759C arrived (turn=90 min is a fixed assumption)
+#0054 D01 Sat 20:35 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O3 still occupied by BF-JJJ87C when BF-GMNQSD arrived (turn=90 min is a fixed assumption)
+#0055 D01 Sat 20:36 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table NER-I2 still occupied by BF-UJRLET when BF-KWWZKD arrived (turn=90 min is a fixed assumption)
+#0056 D01 Sat 20:37 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-B2 still occupied by BF-WRCQZM when BF-WPDDFJ arrived (turn=90 min is a fixed assumption)
+#0057 D01 Sat 20:37 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I1 still occupied by BF-AUNV23 when BF-WH6MGY arrived (turn=90 min is a fixed assumption)
+#0058 D01 Sat 20:37 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I6 still occupied by BF-45BTR8 when BF-SJNJDR arrived (turn=90 min is a fixed assumption)
+#0059 D01 Sat 20:38 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I3 still occupied by BF-MXGM6J when BF-T64JNN arrived (turn=90 min is a fixed assumption)
+#0060 D01 Sat 20:39 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I1 still occupied by BF-AUNV23 when BF-ZH759C arrived (turn=90 min is a fixed assumption)
+#0061 D01 Sat 20:41 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table NER-I2 still occupied by BF-UJRLET when BF-KWWZKD arrived (turn=90 min is a fixed assumption)
+#0062 D01 Sat 20:42 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I6 still occupied by BF-45BTR8 when BF-SJNJDR arrived (turn=90 min is a fixed assumption)
+#0063 D01 Sat 20:42 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-B2 still occupied by BF-WRCQZM when BF-WPDDFJ arrived (turn=90 min is a fixed assumption)
+#0064 D01 Sat 20:42 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I1 still occupied by BF-AUNV23 when BF-WH6MGY arrived (turn=90 min is a fixed assumption)
+#0065 D01 Sat 20:43 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I3 still occupied by BF-MXGM6J when BF-T64JNN arrived (turn=90 min is a fixed assumption)
+#0066 D01 Sat 20:44 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I1 still occupied by BF-AUNV23 when BF-ZH759C arrived (turn=90 min is a fixed assumption)
+#0067 D01 Sat 20:45 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I1 still occupied by BF-AUNV23 when BF-E9SVUM arrived (turn=90 min is a fixed assumption)
+#0068 D01 Sat 20:46 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table NER-I2 still occupied by BF-UJRLET when BF-KWWZKD arrived (turn=90 min is a fixed assumption)
+#0069 D01 Sat 20:47 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I6 still occupied by BF-45BTR8 when BF-SJNJDR arrived (turn=90 min is a fixed assumption)
+#0070 D01 Sat 20:47 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-B2 still occupied by BF-WRCQZM when BF-WPDDFJ arrived (turn=90 min is a fixed assumption)
+#0071 D01 Sat 20:47 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I1 still occupied by BF-AUNV23 when BF-WH6MGY arrived (turn=90 min is a fixed assumption)
+#0072 D01 Sat 20:49 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I1 still occupied by BF-AUNV23 when BF-ZH759C arrived (turn=90 min is a fixed assumption)
+#0073 D01 Sat 20:50 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I1 still occupied by BF-AUNV23 when BF-E9SVUM arrived (turn=90 min is a fixed assumption)
+#0074 D01 Sat 20:51 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table NER-I2 still occupied by BF-UJRLET when BF-KWWZKD arrived (turn=90 min is a fixed assumption)
+#0075 D01 Sat 20:52 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-B2 still occupied by BF-WRCQZM when BF-WPDDFJ arrived (turn=90 min is a fixed assumption)
+#0076 D01 Sat 20:52 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I1 still occupied by BF-AUNV23 when BF-WH6MGY arrived (turn=90 min is a fixed assumption)
+#0077 D01 Sat 20:52 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I6 still occupied by BF-45BTR8 when BF-SJNJDR arrived (turn=90 min is a fixed assumption)
+#0078 D01 Sat 20:55 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I1 still occupied by BF-AUNV23 when BF-E9SVUM arrived (turn=90 min is a fixed assumption)
+#0079 D01 Sat 20:56 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table NER-I2 still occupied by BF-UJRLET when BF-KWWZKD arrived (turn=90 min is a fixed assumption)
+#0080 D01 Sat 20:56 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I9 still occupied by BF-SL64ZW when BF-UPJKAB arrived (turn=90 min is a fixed assumption)
+#0081 D01 Sat 20:57 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I1 still occupied by BF-AUNV23 when BF-WH6MGY arrived (turn=90 min is a fixed assumption)
+#0082 D01 Sat 20:57 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-B2 still occupied by BF-WRCQZM when BF-WPDDFJ arrived (turn=90 min is a fixed assumption)
+#0083 D01 Sat 21:00 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I1 still occupied by BF-AUNV23 when BF-E9SVUM arrived (turn=90 min is a fixed assumption)
+#0084 D01 Sat 21:01 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I9 still occupied by BF-SL64ZW when BF-UPJKAB arrived (turn=90 min is a fixed assumption)
+#0085 D01 Sat 21:02 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-3X6SNW arrived (turn=90 min is a fixed assumption)
+#0086 D01 Sat 21:05 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I1 still occupied by BF-AUNV23 when BF-E9SVUM arrived (turn=90 min is a fixed assumption)
+#0087 D01 Sat 21:06 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I9 still occupied by BF-SL64ZW when BF-UPJKAB arrived (turn=90 min is a fixed assumption)
+#0088 D01 Sat 21:07 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-3X6SNW arrived (turn=90 min is a fixed assumption)
+#0089 D01 Sat 21:11 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I9 still occupied by BF-SL64ZW when BF-UPJKAB arrived (turn=90 min is a fixed assumption)
+#0090 D01 Sat 21:12 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-3X6SNW arrived (turn=90 min is a fixed assumption)
+#0091 D01 Sat 21:17 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-3X6SNW arrived (turn=90 min is a fixed assumption)
+#0092 D01 Sat 21:22 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-3X6SNW arrived (turn=90 min is a fixed assumption)
+#0093 D01 Sat 21:28 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-I8 still occupied by BF-WYTMD5 when BF-K7RDWY arrived (turn=90 min is a fixed assumption)
+#0094 D01 Sat 23:59 [WARN] HOURS_VIOLATION: booking at 22:00 at panaji falls outside opening hours "12:30 PM – 10:00 PM" (slot list is global, not per outlet)
+#0095 D01 Sat 23:59 [CRITICAL] DOUBLE_BOOKING: BF-Y7LFR4 (20:00) and BF-3K26HR (20:00) both hold PNJ-I9 on 2026-10-20 at panaji; created 2 ms apart; SAME GUEST (double-submit) => classic race
+#0096 D01 Sat 23:59 [CRITICAL] DOUBLE_BOOKING: BF-FCEXH8 (19:30) and BF-W48BPS (19:30) both hold MOR-I4 on 2026-10-18 at morjim; created 2 ms apart; SAME GUEST (double-submit) => classic race
+#0097 D01 Sat 23:59 [CRITICAL] DOUBLE_BOOKING: BF-FY4B6C (18:30) and BF-HVEFRW (18:30) both hold PNJ-I1 on 2026-10-19 at panaji; created 6 ms apart; SAME GUEST (double-submit) => classic race
+#0098 D01 Sat 23:59 [CRITICAL] DOUBLE_BOOKING: BF-KU4KA4 (14:00) and BF-KJ3VUP (14:00) both hold ANJ-I1 on 2026-10-19 at anjuna; created 10 ms apart; SAME GUEST (double-submit) => classic race
+#0099 D01 Sat 23:59 [ERROR] LOST_UPDATE: BF-553HZG: UI/host was told "completed" but server says "seated"
+#0100 D01 Sat 23:59 [CRITICAL] GHOST_CONFIRMATION: BF-LDW4CP was confirmed to the guest/host but is missing on the server (client swallows network errors)
+#0101 D01 Sat 23:59 [ERROR] LOST_UPDATE: BF-NRF527: UI/host was told "completed" but server says "seated"
+#0102 D01 Sat 23:59 [CRITICAL] GHOST_CONFIRMATION: BF-79YCRC was confirmed to the guest/host but is missing on the server (client swallows network errors)
+#0103 D01 Sat 23:59 [ERROR] LOST_UPDATE: BF-R77SW5: UI/host was told "completed" but server says "seated"
+#0104 D01 Sat 23:59 [CRITICAL] GHOST_CONFIRMATION: BF-R3N2QV was confirmed to the guest/host but is missing on the server (client swallows network errors)
+#0105 D02 Sun 12:32 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-5L6LEX arrived (turn=90 min is a fixed assumption)
+#0106 D02 Sun 12:37 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-5L6LEX arrived (turn=90 min is a fixed assumption)
+#0107 D02 Sun 12:42 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-5L6LEX arrived (turn=90 min is a fixed assumption)
+#0108 D02 Sun 12:47 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-5L6LEX arrived (turn=90 min is a fixed assumption)
+#0109 D02 Sun 12:52 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-5L6LEX arrived (turn=90 min is a fixed assumption)
+#0110 D02 Sun 14:36 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I4 still occupied by BF-MQAYFW when BF-9ASEPL arrived (turn=90 min is a fixed assumption)
+#0111 D02 Sun 14:41 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I4 still occupied by BF-MQAYFW when BF-9ASEPL arrived (turn=90 min is a fixed assumption)
+#0112 D02 Sun 14:46 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I4 still occupied by BF-MQAYFW when BF-9ASEPL arrived (turn=90 min is a fixed assumption)
+#0113 D02 Sun 14:57 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-I3 still occupied by BF-U79TY8 when BF-T9TVBW arrived (turn=90 min is a fixed assumption)
+#0114 D02 Sun 15:02 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-I3 still occupied by BF-U79TY8 when BF-T9TVBW arrived (turn=90 min is a fixed assumption)
+#0115 D02 Sun 15:07 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-I3 still occupied by BF-U79TY8 when BF-T9TVBW arrived (turn=90 min is a fixed assumption)
+#0116 D02 Sun 15:12 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-I3 still occupied by BF-U79TY8 when BF-T9TVBW arrived (turn=90 min is a fixed assumption)
+#0117 D02 Sun 15:17 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-I3 still occupied by BF-U79TY8 when BF-T9TVBW arrived (turn=90 min is a fixed assumption)
+#0118 D02 Sun 18:21 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-I3 still occupied by BF-UYW2D5 when BF-CAYD8U arrived (turn=90 min is a fixed assumption)
+#0119 D02 Sun 18:26 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-I3 still occupied by BF-UYW2D5 when BF-CAYD8U arrived (turn=90 min is a fixed assumption)
+#0120 D02 Sun 18:26 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-J6WSU9 arrived (turn=90 min is a fixed assumption)
+#0121 D02 Sun 18:31 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-J6WSU9 arrived (turn=90 min is a fixed assumption)
+#0122 D02 Sun 18:31 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-I3 still occupied by BF-UYW2D5 when BF-CAYD8U arrived (turn=90 min is a fixed assumption)
+#0123 D02 Sun 18:36 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-J6WSU9 arrived (turn=90 min is a fixed assumption)
+#0124 D02 Sun 18:41 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-J6WSU9 arrived (turn=90 min is a fixed assumption)
+#0125 D02 Sun 18:46 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-J6WSU9 arrived (turn=90 min is a fixed assumption)
+#0126 D02 Sun 19:00 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-HCZEQ2 arrived (turn=90 min is a fixed assumption)
+#0127 D02 Sun 19:01 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-I6 still occupied by BF-UJBSVJ when BF-SWRFWF arrived (turn=90 min is a fixed assumption)
+#0128 D02 Sun 19:05 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-HCZEQ2 arrived (turn=90 min is a fixed assumption)
+#0129 D02 Sun 19:10 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-HCZEQ2 arrived (turn=90 min is a fixed assumption)
+#0130 D02 Sun 19:15 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-HCZEQ2 arrived (turn=90 min is a fixed assumption)
+#0131 D02 Sun 19:20 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-HCZEQ2 arrived (turn=90 min is a fixed assumption)
+#0132 D02 Sun 20:03 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-KWX9YA arrived (turn=90 min is a fixed assumption)
+#0133 D02 Sun 20:08 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-KWX9YA arrived (turn=90 min is a fixed assumption)
+#0134 D02 Sun 20:08 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-UQ3B5J arrived (turn=90 min is a fixed assumption)
+#0135 D02 Sun 20:13 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-UQ3B5J arrived (turn=90 min is a fixed assumption)
+#0136 D02 Sun 20:13 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-KWX9YA arrived (turn=90 min is a fixed assumption)
+#0137 D02 Sun 20:18 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-UQ3B5J arrived (turn=90 min is a fixed assumption)
+#0138 D02 Sun 20:18 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-KWX9YA arrived (turn=90 min is a fixed assumption)
+#0139 D02 Sun 20:23 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-UQ3B5J arrived (turn=90 min is a fixed assumption)
+#0140 D02 Sun 20:23 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-KWX9YA arrived (turn=90 min is a fixed assumption)
+#0141 D02 Sun 20:27 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-I6 still occupied by BF-SWRFWF when BF-FCFXTK arrived (turn=90 min is a fixed assumption)
+#0142 D02 Sun 20:28 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-UQ3B5J arrived (turn=90 min is a fixed assumption)
+#0143 D02 Sun 20:32 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-I6 still occupied by BF-SWRFWF when BF-FCFXTK arrived (turn=90 min is a fixed assumption)
+#0144 D02 Sun 20:50 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I1 still occupied by BF-7T72CM when BF-XDCGCA arrived (turn=90 min is a fixed assumption)
+#0145 D02 Sun 20:55 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I1 still occupied by BF-7T72CM when BF-XDCGCA arrived (turn=90 min is a fixed assumption)
+#0146 D02 Sun 21:00 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I1 still occupied by BF-7T72CM when BF-XDCGCA arrived (turn=90 min is a fixed assumption)
+#0147 D02 Sun 21:05 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I1 still occupied by BF-7T72CM when BF-XDCGCA arrived (turn=90 min is a fixed assumption)
+#0148 D02 Sun 21:10 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I1 still occupied by BF-7T72CM when BF-XDCGCA arrived (turn=90 min is a fixed assumption)
+#0149 D02 Sun 21:22 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-B4 still occupied by BF-2AEMWB when BF-ZWWW4G arrived (turn=90 min is a fixed assumption)
+#0150 D02 Sun 21:27 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-B4 still occupied by BF-2AEMWB when BF-ZWWW4G arrived (turn=90 min is a fixed assumption)
+#0151 D02 Sun 21:35 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-Q9HQQE arrived (turn=90 min is a fixed assumption)
+#0152 D02 Sun 21:39 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-F79Z68 arrived (turn=90 min is a fixed assumption)
+#0153 D02 Sun 21:40 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-Q9HQQE arrived (turn=90 min is a fixed assumption)
+#0154 D02 Sun 21:44 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-F79Z68 arrived (turn=90 min is a fixed assumption)
+#0155 D02 Sun 21:45 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-Q9HQQE arrived (turn=90 min is a fixed assumption)
+#0156 D02 Sun 21:49 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-F79Z68 arrived (turn=90 min is a fixed assumption)
+#0157 D02 Sun 21:50 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-Q9HQQE arrived (turn=90 min is a fixed assumption)
+#0158 D02 Sun 21:54 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-F79Z68 arrived (turn=90 min is a fixed assumption)
+#0159 D02 Sun 21:55 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-Q9HQQE arrived (turn=90 min is a fixed assumption)
+#0160 D02 Sun 21:59 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-F79Z68 arrived (turn=90 min is a fixed assumption)
+#0161 D02 Sun 23:59 [CRITICAL] DOUBLE_BOOKING: BF-MC6HGM (20:00) and BF-LFTGK3 (20:00) both hold VAG-O6 on 2026-10-20 at vagator; created 2 ms apart; SAME GUEST (double-submit) => classic race
+#0162 D02 Sun 23:59 [CRITICAL] DOUBLE_BOOKING: BF-RTQVXB (19:30) and BF-HQFAKN (19:30) both hold DP-I4 on 2026-10-19 at dona-paula; created 7 ms apart; SAME GUEST (double-submit) => classic race
+#0163 D02 Sun 23:59 [CRITICAL] DOUBLE_BOOKING: BF-9P6ZBQ (17:30) and BF-V4CKZ7 (17:30) both hold DEL-I2 on 2026-10-20 at delhi; created 11 ms apart; SAME GUEST (double-submit) => classic race
+#0164 D03 Mon 12:28 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-TPVJKA arrived (turn=90 min is a fixed assumption)
+#0165 D03 Mon 12:33 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-TPVJKA arrived (turn=90 min is a fixed assumption)
+#0166 D03 Mon 12:38 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-TPVJKA arrived (turn=90 min is a fixed assumption)
+#0167 D03 Mon 12:43 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-TPVJKA arrived (turn=90 min is a fixed assumption)
+#0168 D03 Mon 12:48 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-TPVJKA arrived (turn=90 min is a fixed assumption)
+#0169 D03 Mon 19:55 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DP-I3 still occupied by BF-74U5VQ when BF-5JZX5A arrived (turn=90 min is a fixed assumption)
+#0170 D03 Mon 20:00 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DP-I3 still occupied by BF-74U5VQ when BF-5JZX5A arrived (turn=90 min is a fixed assumption)
+#0171 D03 Mon 20:05 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DP-I3 still occupied by BF-74U5VQ when BF-5JZX5A arrived (turn=90 min is a fixed assumption)
+#0172 D03 Mon 20:27 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table NER-I3 still occupied by BF-BWN2CY when BF-78C9UY arrived (turn=90 min is a fixed assumption)
+#0173 D03 Mon 20:32 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table NER-I3 still occupied by BF-BWN2CY when BF-78C9UY arrived (turn=90 min is a fixed assumption)
+#0174 D03 Mon 23:59 [ERROR] LOST_UPDATE: BF-82D55X: UI/host was told "completed" but server says "seated"
+#0175 D03 Mon 23:59 [ERROR] LOST_UPDATE: BF-JX3R9Z: UI/host was told "completed" but server says "seated"
+#0176 D04 Tue 13:48 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-HEQKEY arrived (turn=90 min is a fixed assumption)
+#0177 D04 Tue 13:53 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-HEQKEY arrived (turn=90 min is a fixed assumption)
+#0178 D04 Tue 13:58 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-HEQKEY arrived (turn=90 min is a fixed assumption)
+#0179 D04 Tue 14:03 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-HEQKEY arrived (turn=90 min is a fixed assumption)
+#0180 D04 Tue 14:08 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-HEQKEY arrived (turn=90 min is a fixed assumption)
+#0181 D04 Tue 17:20 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-9PQEYX arrived (turn=90 min is a fixed assumption)
+#0182 D04 Tue 17:25 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-9PQEYX arrived (turn=90 min is a fixed assumption)
+#0183 D04 Tue 17:30 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-9PQEYX arrived (turn=90 min is a fixed assumption)
+#0184 D04 Tue 17:35 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-9PQEYX arrived (turn=90 min is a fixed assumption)
+#0185 D04 Tue 17:40 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-9PQEYX arrived (turn=90 min is a fixed assumption)
+#0186 D04 Tue 18:35 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I1 still occupied by BF-ECNPYH when BF-6UAGK9 arrived (turn=90 min is a fixed assumption)
+#0187 D04 Tue 18:40 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-I9 still occupied by BF-JX3R9Z when BF-26NZGT arrived (turn=90 min is a fixed assumption)
+#0188 D04 Tue 18:45 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-I9 still occupied by BF-JX3R9Z when BF-26NZGT arrived (turn=90 min is a fixed assumption)
+#0189 D04 Tue 18:50 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-I9 still occupied by BF-JX3R9Z when BF-26NZGT arrived (turn=90 min is a fixed assumption)
+#0190 D04 Tue 18:55 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-I9 still occupied by BF-JX3R9Z when BF-26NZGT arrived (turn=90 min is a fixed assumption)
+#0191 D04 Tue 18:58 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I2 still occupied by BF-9P6ZBQ when BF-466HMG arrived (turn=90 min is a fixed assumption)
+#0192 D04 Tue 19:00 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-I9 still occupied by BF-JX3R9Z when BF-26NZGT arrived (turn=90 min is a fixed assumption)
+#0193 D04 Tue 19:03 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I2 still occupied by BF-9P6ZBQ when BF-466HMG arrived (turn=90 min is a fixed assumption)
+#0194 D04 Tue 19:53 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-WB58ET arrived (turn=90 min is a fixed assumption)
+#0195 D04 Tue 19:58 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-WB58ET arrived (turn=90 min is a fixed assumption)
+#0196 D04 Tue 20:03 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-WB58ET arrived (turn=90 min is a fixed assumption)
+#0197 D04 Tue 20:06 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-I9 still occupied by BF-JX3R9Z when BF-649WEW arrived (turn=90 min is a fixed assumption)
+#0198 D04 Tue 20:08 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-WB58ET arrived (turn=90 min is a fixed assumption)
+#0199 D04 Tue 20:11 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-I9 still occupied by BF-JX3R9Z when BF-649WEW arrived (turn=90 min is a fixed assumption)
+#0200 D04 Tue 20:13 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table DEL-I7 still occupied by BF-553HZG when BF-WB58ET arrived (turn=90 min is a fixed assumption)
+#0201 D04 Tue 20:16 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-I9 still occupied by BF-JX3R9Z when BF-649WEW arrived (turn=90 min is a fixed assumption)
+#0202 D04 Tue 20:21 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-I9 still occupied by BF-JX3R9Z when BF-649WEW arrived (turn=90 min is a fixed assumption)
+#0203 D04 Tue 20:23 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-9PLWGH arrived (turn=90 min is a fixed assumption)
+#0204 D04 Tue 20:25 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-ZJRW79 arrived (turn=90 min is a fixed assumption)
+#0205 D04 Tue 20:26 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-I9 still occupied by BF-JX3R9Z when BF-649WEW arrived (turn=90 min is a fixed assumption)
+#0206 D04 Tue 20:28 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-9PLWGH arrived (turn=90 min is a fixed assumption)
+#0207 D04 Tue 20:30 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-ZJRW79 arrived (turn=90 min is a fixed assumption)
+#0208 D04 Tue 20:33 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-9PLWGH arrived (turn=90 min is a fixed assumption)
+#0209 D04 Tue 20:33 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I4 still occupied by BF-9DFVFE when BF-8VD469 arrived (turn=90 min is a fixed assumption)
+#0210 D04 Tue 20:35 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-ZJRW79 arrived (turn=90 min is a fixed assumption)
+#0211 D04 Tue 20:38 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table MOR-I4 still occupied by BF-9DFVFE when BF-8VD469 arrived (turn=90 min is a fixed assumption)
+#0212 D04 Tue 20:38 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-I2 still occupied by BF-82D55X when BF-APQA7C arrived (turn=90 min is a fixed assumption)
+#0213 D04 Tue 20:38 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-9PLWGH arrived (turn=90 min is a fixed assumption)
+#0214 D04 Tue 20:40 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-ZJRW79 arrived (turn=90 min is a fixed assumption)
+#0215 D04 Tue 20:43 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-I2 still occupied by BF-82D55X when BF-APQA7C arrived (turn=90 min is a fixed assumption)
+#0216 D04 Tue 20:43 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table PNJ-I4 still occupied by BF-R77SW5 when BF-9PLWGH arrived (turn=90 min is a fixed assumption)
+#0217 D04 Tue 20:45 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table ANJ-O7 still occupied by BF-NRF527 when BF-ZJRW79 arrived (turn=90 min is a fixed assumption)
+#0218 D04 Tue 20:48 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-I2 still occupied by BF-82D55X when BF-APQA7C arrived (turn=90 min is a fixed assumption)
+#0219 D04 Tue 20:53 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-I2 still occupied by BF-82D55X when BF-APQA7C arrived (turn=90 min is a fixed assumption)
+#0220 D04 Tue 20:58 [INFO] OVERSTAY_BLOCKS_ARRIVAL: table VAG-I2 still occupied by BF-82D55X when BF-APQA7C arrived (turn=90 min is a fixed assumption)
+#0221 D04 Tue 23:59 [ERROR] LOST_UPDATE: BF-466HMG: UI/host was told "completed" but server says "seated"
+#0222 D04 Tue 23:59 [CRITICAL] GHOST_CONFIRMATION: BF-SCDAUB was confirmed to the guest/host but is missing on the server (client swallows network errors)
+#0223 D04 Tue 23:59 [ERROR] LOST_UPDATE: BF-QYQ6VH: UI/host was told "completed" but server says "seated"
+#0224 D05 Wed 06:00 [ERROR] SERVER_ACCEPTS_INVALID: server accepted a 1 MB "notes" field (schema says max 300 chars; no body-size limit => trivial DoS / DB bloat)
+#0225 D05 Wed 06:00 [WARN] SSE_PAYLOAD_O_N: largest SSE event was 2530 KB (whole table sent on every change)

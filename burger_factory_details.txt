@@ -1,0 +1,633 @@
+================================================================================
+THE BURGER FACTORY — COMPLETE SYSTEM ARCHITECTURE & CODEBASE SPECIFICATION
+================================================================================
+Generated for: System Architecture Analysis & Comprehensive Upgrade Planning
+Workspace Path: d:\Burger_factory
+Application Name: The Burger Factory (Gourmet Burgers & Online Table Booking)
+Version: 1.0.0
+Author: The Burger Factory Team / Antigravity AI
+Date: October 2026
+
+--------------------------------------------------------------------------------
+TABLE OF CONTENTS
+--------------------------------------------------------------------------------
+1. Executive Project Overview
+2. Complete Directory Structure & File Inventory
+3. Build, Runtime & Tooling Configuration
+4. Complete Data Models & Schemas
+   4.1 Menu Items Schema & Data
+   4.2 Locations Schema & Data
+   4.3 Table Layouts & Capacities per Location
+   4.4 Time Slots
+   4.5 Reviews Data
+   4.6 Gallery Data
+   4.7 Reservation Object Data Model
+5. Deep-Dive Codebase Breakdown (File-by-File)
+   5.1 src/js/data.js (Data Store & Mock DB)
+   5.2 src/js/booking.js (Booking Engine, Algorithms & Storage)
+   5.3 src/js/main.js (Customer Landing Page Logic & Animations)
+   5.4 src/js/manager.js (Manager Dashboard, Real-time Operations & Floor Map)
+6. HTML & DOM Architecture
+   6.1 index.html (Customer Facing Application)
+   6.2 manager.html (Manager Operations Dashboard)
+7. Styling System & Visual Design Specification
+   7.1 src/styles/index.css (Design Tokens, Components & Utilities)
+   7.2 src/styles/manager.css (Admin UI, Grid Layouts & Floor Map)
+8. End-to-End User Workflows & Algorithmic Logic
+   8.1 Customer Booking Flow (Availability Calculation & Allocation)
+   8.2 Customer Reservation Lookup & Cancellation Flow
+   8.3 Manager Live Dashboard & Status Mutation Lifecycle
+   8.4 Walk-In Floor Plan Seating Flow
+   8.5 CSV Reporting & Analytics Export
+9. Current Technical Debt, Limitations & Architectural Gaps
+10. Recommended Upgrade Directives & External AI Prompt Template
+
+================================================================================
+1. EXECUTIVE PROJECT OVERVIEW
+================================================================================
+"The Burger Factory" is a premium, modern web application designed for an iconic
+gourmet burger brand originated in Anjuna, Goa, and expanded across 7 locations
+(Anjuna, Morjim, Vagator, Nerul, Dona Paula, Panaji, and New Delhi).
+
+The project solves the restaurant's #1 operational challenge: Long waiting lines
+and table turn management during peak hours. It provides:
+1. Customer Experience (index.html):
+   - Immersive brand presentation with gourmet visuals, particle animations,
+     animated stats counters, and interactive story/menu/locations/reviews sections.
+   - Real-time online table booking system allowing guests to select outlet, date,
+     time slot, party size (1-8+), seating zone (indoor, outdoor, beachside), and
+     special occasions/requests.
+   - Instant booking confirmation with human-readable Booking IDs (e.g., BF-XXXX)
+     and self-service reservation tracking/cancellation.
+2. Manager Operations Dashboard (manager.html):
+   - Control panel for restaurant floor managers and hosts.
+   - Date, outlet, and status filtering (Confirmed, Seated, Completed, Cancelled, No-Show).
+   - Real-time search across guests, IDs, phone numbers, and emails.
+   - Interactive Visual Floor Map showing physical tables by zone, colored by live
+     occupancy status (Available, Reserved, Occupied).
+   - Walk-In Seating capability directly by clicking on available tables on the floor map.
+   - One-click status transitions (Confirmed -> Seated -> Completed).
+   - Real-time key metrics computation (Total active, Seated, Confirmed, Guests, No-Shows).
+   - CSV export for daily operations and auditing.
+
+Currently, the application runs entirely on client-side vanilla JavaScript and Vite,
+using the browser's `localStorage` as a mock persistence layer. It is built to be
+upgraded into a production-grade full-stack system.
+
+================================================================================
+2. COMPLETE DIRECTORY STRUCTURE & FILE INVENTORY
+================================================================================
+Root Directory: d:\Burger_factory\
+
+d:\Burger_factory\
+├── burger_factory_details.txt   # This complete codebase blueprint file
+├── index.html                   # Customer portal: landing page, menu, booking & lookup (27.4 KB)
+├── manager.html                 # Manager portal: floor map, reservations management (8.6 KB)
+├── package.json                 # Project dependencies and npm scripts (298 B)
+├── package-lock.json            # Exact dependency lockfile (25.4 KB)
+├── structure.txt                # Architectural guide and scalability checklist (8.8 KB)
+├── vite.config.js               # Multi-page Vite build & dev server configuration (352 B)
+└── src\
+    ├── js\
+    │   ├── booking.js           # Core business logic: algorithms, localStorage mock DB (12.8 KB)
+    │   ├── data.js              # Mock database: menu, locations, tables, reviews, gallery (19.2 KB)
+    │   ├── main.js              # Controller for index.html: animations, forms, interactions (23.8 KB)
+    │   └── manager.js           # Controller for manager.html: dashboard, table map, walk-in (25.1 KB)
+    └── styles\
+        ├── index.css            # Global design tokens, typography, dark theme, UI system (41.2 KB)
+        └── manager.css          # Manager dashboard layout, sidebar, table, and floor map (14.9 KB)
+
+================================================================================
+3. BUILD, RUNTIME & TOOLING CONFIGURATION
+================================================================================
+File: d:\Burger_factory\package.json
+- Name: "burger-factory"
+- Version: "1.0.0"
+- Type: "module" (ES Modules enabled natively)
+- Scripts:
+  - "dev": "vite" (starts local development server at http://localhost:3000)
+  - "build": "vite build" (bundles assets for production into /dist)
+  - "preview": "vite preview" (locally previews production build)
+- DevDependencies:
+  - "vite": "^6.0.0"
+
+File: d:\Burger_factory\vite.config.js
+- Framework: Vite 6
+- Config Details:
+  - root: '.' (current directory)
+  - publicDir: 'public'
+  - build.outDir: 'dist'
+  - build.assetsDir: 'assets'
+  - build.minify: 'terser'
+  - rollupOptions.input: Multi-page setup:
+    - main: './index.html'
+    - manager: './manager.html'
+  - server.port: 3000
+  - server.open: true (auto-opens browser upon `npm run dev`)
+
+================================================================================
+4. COMPLETE DATA MODELS & SCHEMAS
+================================================================================
+
+--------------------------------------------------------------------------------
+4.1 Menu Items Schema & Data (from src/js/data.js)
+--------------------------------------------------------------------------------
+Object Structure:
+{
+  id: string,          // Unique slug (e.g. "double-cheddar-bacon-bbq")
+  name: string,        // Display name
+  description: string, // Detailed culinary description
+  price: number,       // Price in INR (e.g. 550)
+  category: string,    // Category filter: "beef" | "chicken" | "veg" | "sides" | "shakes"
+  image: string,       // Unsplash image URL with query params
+  badge: string|null,  // "popular" | "new" | "veg" | null
+  tags: string[]       // Array of feature badges (e.g. ["Bestseller", "Spicy"])
+}
+
+Item Catalog:
+1. Double Cheddar Bacon BBQ (id: 'double-cheddar-bacon-bbq', category: 'beef', price: ₹550, badge: 'popular', tags: ['Bestseller', 'Spicy'])
+2. Blue Cheese Beef Burger (id: 'blue-cheese-beef', category: 'beef', price: ₹520, badge: null, tags: ['Premium'])
+3. The Classic Cheeseburger (id: 'classic-cheeseburger', category: 'beef', price: ₹420, badge: 'popular', tags: ['Classic'])
+4. The Big Kahuna (id: 'big-kahuna', category: 'beef', price: ₹620, badge: 'new', tags: ['Signature', 'Large'])
+5. Grilled Chicken Filet (id: 'grilled-chicken-filet', category: 'chicken', price: ₹450, badge: null, tags: ['Healthy'])
+6. Bacon & Pesto Chicken (id: 'bacon-pesto-chicken', category: 'chicken', price: ₹490, badge: 'popular', tags: ['Italian'])
+7. Black Bean, Cheddar & Corn (id: 'black-bean-cheddar-corn', category: 'veg', price: ₹380, badge: 'veg', tags: ['Vegan Option'])
+8. Spinach, Mushroom & Blue Cheese (id: 'spinach-mushroom-blue-cheese', category: 'veg', price: ₹420, badge: 'veg', tags: ['Gourmet'])
+9. Chickpea, Carrot & Cheddar (id: 'chickpea-carrot-cheddar', category: 'veg', price: ₹360, badge: 'veg', tags: ['Healthy', 'Protein'])
+10. Signature Hand-Cut Fries (id: 'hand-cut-fries', category: 'sides', price: ₹220, badge: 'popular', tags: ['Must Try'])
+11. Beer-Battered Onion Rings (id: 'onion-rings', category: 'sides', price: ₹240, badge: null, tags: ['Crunchy'])
+12. Banana Peanut Butter Shake (id: 'peanut-butter-shake', category: 'shakes', price: ₹280, badge: 'popular', tags: ['Legendary'])
+13. Oreo Cookie Shake (id: 'oreo-shake', category: 'shakes', price: ₹260, badge: null, tags: ['Indulgent'])
+14. Strawberry Mojito (id: 'strawberry-mojito', category: 'shakes', price: ₹220, badge: 'new', tags: ['Refreshing'])
+
+--------------------------------------------------------------------------------
+4.2 Locations Schema & Data (from src/js/data.js)
+--------------------------------------------------------------------------------
+Object Structure:
+{
+  id: string,          // Slug identifier ("anjuna", "morjim", "vagator", "nerul", "dona-paula", "panaji", "delhi")
+  name: string,        // Display name (e.g. "Anjuna")
+  tag: string,         // Visual badge ("Flagship", "Beachside", "Popular", "City", "New", or "")
+  area: string,        // Geographical area ("North Goa", "Central Goa", "South Goa", "NCR")
+  address: string,     // Full postal address
+  hours: string,       // Operational hours string
+  seating: string,     // Seating zones ("Indoor & Outdoor", "Beachside & Indoor", etc.)
+  tables: number,      // Total physical table count
+  capacity: number,    // Total seat capacity
+  vibe: string,        // Keywords describing atmosphere
+  image: string,       // Atmosphere cover photo URL
+  features: string[],  // Amenity tags (["Pet Friendly", "Live Music", "Sunset Views", etc.])
+  mapUrl: string       // Google Maps query URL
+}
+
+7 Active Locations:
+1. Anjuna: Flagship, North Goa, 18 tables, 72 seats, Vibe: "Rustic · Hippie · Cozy", Features: Pet Friendly, Live Music (Fri-Sat), Full Bar.
+2. Morjim: Beachside, North Goa, 24 tables, 96 seats, Vibe: "Beach · Sunset · Chill", Features: Sunset Views, Beachside Seating, Full Bar.
+3. Vagator: Popular, North Goa, 14 tables, 56 seats, Vibe: "Casual · Trendy · Lively", Features: Tourist Friendly, Quick Service.
+4. Nerul: North Goa, 10 tables, 40 seats, Vibe: "Compact · Local · Relaxed", Features: Family Friendly, Parking Available.
+5. Dona Paula: South Goa, 12 tables, 48 seats, Vibe: "Scenic · Jetty Views · Calm", Features: Sea Views, Terrace Seating.
+6. Panaji: Central Goa, 16 tables, 64 seats, Vibe: "Urban · Modern · Bustling", Features: AC Dining, Central Location, Takeaway.
+7. New Delhi: NCR, 20 tables, 80 seats, Vibe: "Metro · Vibrant · Night-owl", Features: Rooftop Seating, Late Night, Delivery.
+
+--------------------------------------------------------------------------------
+4.3 Table Layouts & Capacities per Location (export const locationTables)
+--------------------------------------------------------------------------------
+Zone & Table mapping structure:
+Keyed by location ID. Inside each location, objects are keyed by zone ("indoor", "outdoor", "beachside").
+Each table object has:
+  { id: string, type: '2-seater' | '4-seater' | '6-seater' | '8-seater' | '10-seater', capacity: number }
+
+Summary of tables per location:
+- anjuna:
+  - indoor (9 tables): ANJ-I1 to ANJ-I3 (2-seaters), ANJ-I4 to ANJ-I7 (4-seaters), ANJ-I8 to ANJ-I9 (6-seaters)
+  - outdoor (9 tables): ANJ-O1 to ANJ-O2 (2-seaters), ANJ-O3 to ANJ-O6 (4-seaters), ANJ-O7 (6-seater), ANJ-O8 to ANJ-O9 (8-seaters)
+- morjim:
+  - indoor (6 tables): MOR-I1 to MOR-I2 (2-seaters), MOR-I3 to MOR-I5 (4-seaters), MOR-I6 (6-seater)
+  - beachside (14 tables): MOR-B1 to MOR-B3 (2-seaters), MOR-B4 to MOR-B8 (4-seaters), MOR-B9 to MOR-B11 (6-seaters), MOR-B12 to MOR-B14 (8-seaters)
+- vagator:
+  - indoor (6 tables): VAG-I1 to VAG-I2 (2-seaters), VAG-I3 to VAG-I5 (4-seaters), VAG-I6 (6-seater)
+  - outdoor (8 tables): VAG-O1 (2-seater), VAG-O2 to VAG-O5 (4-seaters), VAG-O6 to VAG-O7 (6-seaters), VAG-O8 (8-seater)
+- nerul:
+  - indoor (10 tables): NER-I1 to NER-I2 (2-seaters), NER-I3 to NER-I6 (4-seaters), NER-I7 to NER-I8 (6-seaters), NER-I9 to NER-I10 (8-seaters)
+- dona-paula:
+  - indoor (5 tables): DP-I1 to DP-I2 (2-seaters), DP-I3 to DP-I4 (4-seaters), DP-I5 (6-seater)
+  - outdoor (7 tables): DP-O1 (2-seater), DP-O2 to DP-O4 (4-seaters), DP-O5 to DP-O6 (6-seaters), DP-O7 (8-seater)
+- panaji:
+  - indoor (16 tables): PNJ-I1 to PNJ-I3 (2-seaters), PNJ-I4 to PNJ-I8 (4-seaters), PNJ-I9 to PNJ-I11 (6-seaters), PNJ-I12 to PNJ-I15 (8-seaters), PNJ-I16 (10-seater)
+- delhi:
+  - indoor (10 tables): DEL-I1 to DEL-I3 (2-seaters), DEL-I4 to DEL-I7 (4-seaters), DEL-I8 to DEL-I10 (6-seaters)
+  - outdoor (10 tables): DEL-R1 to DEL-R2 (2-seaters), DEL-R3 to DEL-R6 (4-seaters), DEL-R7 to DEL-R8 (6-seaters), DEL-R9 to DEL-R10 (8-seaters)
+
+--------------------------------------------------------------------------------
+4.4 Time Slots (export const timeSlots)
+--------------------------------------------------------------------------------
+Standardized 30-minute intervals from 12:30 PM to 10:00 PM:
+['12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
+ '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00',
+ '21:30', '22:00']
+
+--------------------------------------------------------------------------------
+4.5 Reviews Data (export const reviews)
+--------------------------------------------------------------------------------
+Array of 6 customer testimonials:
+- Priya Sharma (Anjuna, 5 stars, Oct 2026)
+- Rahul Menon (Morjim Beach, 5 stars, Sep 2026)
+- Ananya Iyer (Vagator, 4 stars, Sep 2026)
+- Daniel Fernandez (Panaji, 5 stars, Aug 2026)
+- Sneha Kulkarni (Delhi, 4 stars, Oct 2026)
+- Vikram Patel (Anjuna, 5 stars, Aug 2026)
+
+--------------------------------------------------------------------------------
+4.6 Gallery Data (export const galleryItems)
+--------------------------------------------------------------------------------
+Array of 8 photographic assets featuring gourmet burgers, beach views, and food styling.
+
+--------------------------------------------------------------------------------
+4.7 Reservation Object Data Model (Stored in localStorage key 'bf_reservations')
+--------------------------------------------------------------------------------
+TypeScript-equivalent Interface:
+interface Reservation {
+  id: string;               // Prefix "BF-" + 4 random uppercase alphanumeric chars (e.g. "BF-8KD2")
+  name: string;             // Customer full name
+  email: string;            // Customer email address
+  phone: string;            // Customer phone number (e.g. "+91 98765 12345")
+  locationId: string;       // Outlet identifier (e.g. "anjuna")
+  locationName: string;     // Formatted name (e.g. "Anjuna, North Goa")
+  date: string;             // ISO date "YYYY-MM-DD"
+  time: string;             // 24h format "HH:MM" (e.g. "19:30")
+  guests: number;           // Party size integer (1 to 8+)
+  seating: string;          // "any" | "indoor" | "outdoor" | "beachside"
+  occasion: string;         // "" | "birthday" | "anniversary" | "date" | "business" | "other"
+  notes: string;            // Free-form dietary/setup requests
+  tableId: string;          // Assigned table (e.g. "ANJ-O3")
+  tableType: string;        // "2-seater" | "4-seater" | "6-seater" | "8-seater" | "10-seater"
+  tableZone: string;        // "indoor" | "outdoor" | "beachside"
+  status: ReservationStatus;// 'confirmed' | 'seated' | 'completed' | 'cancelled' | 'no-show'
+  createdAt: string;        // ISO 8601 timestamp
+  seatedAt?: string;        // ISO timestamp populated when marked as 'seated'
+  completedAt?: string;     // ISO timestamp populated when marked as 'completed'
+  cancelledAt?: string;     // ISO timestamp populated when cancelled
+  noShowAt?: string;        // ISO timestamp populated when marked as 'no-show'
+}
+
+type ReservationStatus = 'confirmed' | 'seated' | 'completed' | 'cancelled' | 'no-show';
+
+================================================================================
+5. DEEP-DIVE CODEBASE BREAKDOWN (FILE-BY-FILE)
+================================================================================
+
+--------------------------------------------------------------------------------
+5.1 src/js/data.js (Data Store & Mock Database)
+--------------------------------------------------------------------------------
+Exports:
+- `menuItems`: Array of 14 food & beverage items with categories, prices, images, and tags.
+- `locations`: Array of 7 outlet descriptions with geo-coordinates, table counts, capacities, and Google Maps links.
+- `galleryItems`: Array of 8 high-res burger and venue photos.
+- `reviews`: Array of 6 verified diner reviews.
+- `locationTables`: Deep object mapping each location to its physical tables by zone with capacities.
+- `timeSlots`: Array of 20 30-minute booking intervals.
+
+--------------------------------------------------------------------------------
+5.2 src/js/booking.js (Booking Engine, Algorithms & Persistence)
+--------------------------------------------------------------------------------
+Dependencies: Imports `locationTables` and `locations` from `./data.js`.
+Storage: Uses `localStorage.getItem('bf_reservations')` and `localStorage.setItem()`.
+
+Internal Helper Functions:
+- `generateBookingId()`: Returns formatted ID like 'BF-X7K9' picking 4 characters randomly from 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' (avoids ambiguous characters 0/O, 1/I).
+- `getReservations()`: Safely retrieves and JSON-parses reservations from localStorage. Returns empty array on JSON error.
+- `saveReservations(reservations)`: Persists array of reservations to localStorage as JSON.
+- `timeToMinutes(time)`: Converts "HH:MM" string to minutes from midnight (e.g., "13:30" -> 810).
+
+Exported Functions:
+- `formatTime(time24)`: Converts 24-hour "HH:MM" to 12-hour format with AM/PM (e.g., "13:30" -> "1:30 PM", "00:00" -> "12:00 AM").
+- `formatDate(dateStr)`: Formats "YYYY-MM-DD" to Indian English locale string: "Weekday, Day Month Year" (e.g., "Friday, October 16, 2026").
+- `getLocationName(locationId)`: Looks up location object by ID and returns "Name, Area" string.
+- `checkAvailability(locationId, date, time, guests, seatingPref)`:
+  The core table assignment & collision detection algorithm:
+  1. Validates location existence in `locationTables`.
+  2. Aggregates all tables across zones into `allTables` array, attaching `.zone`.
+  3. Filters by `seatingPref` (supports zone alias fallbacks, e.g., 'outdoor' includes 'beachside').
+  4. Filters tables having `capacity >= guestCount`.
+  5. Sorts tables in ascending order of capacity (`a.capacity - b.capacity`) to achieve "Best Fit" (allocates smallest possible table to preserve large tables).
+  6. Handles large groups (>6 guests) with specific advisory if no single table fits.
+  7. Time Slot Collision Window: Assumes each reservation occupies a table for 90 minutes. Checks active bookings (excluding 'cancelled' status) on the same date, location, and tableId. If `|requestedTime - bookedTime| < 90`, collision occurs.
+  8. Returns `{ available: true, table, message }` or `{ available: false, table: null, message }`.
+- `createReservation(bookingData)`:
+  Invokes `checkAvailability()`. If available, constructs complete Reservation record, generates ID, assigns table, marks status as 'confirmed', appends to storage, and returns `{ success: true, reservation }`.
+- `createWalkInReservation(walkInData)`:
+  Designed for Floor Managers on the manager dashboard:
+  Takes `{ locationId, tableId, tableType, tableZone, guests, name, phone, notes }`.
+  Calculates current live local date and current live time ("HH:MM").
+  Constructs reservation with status 'seated', sets `seatedAt` timestamp, saves to storage, and returns `{ success: true, reservation }`.
+- `lookupReservation(bookingId)`:
+  Case-insensitive search in storage for a reservation matching the given booking ID.
+- `cancelReservation(bookingId)`:
+  Finds booking by ID, sets `status = 'cancelled'`, sets `cancelledAt` ISO timestamp, and saves. Returns boolean.
+- `getAllReservations()`:
+  Returns all reservation records (unfiltered).
+- `updateReservationStatus(bookingId, status)`:
+  Updates reservation status ('confirmed', 'seated', 'completed', 'no-show', 'cancelled').
+  Automatically adds contextual ISO timestamps: `seatedAt`, `completedAt`, or `noShowAt`.
+- `getLocationStats(locationId, date)`:
+  Calculates total tables, total seat capacity, reservation count, total guests, and estimated occupancy rate for a specific location on a specific date.
+- `seedDemoReservations()`:
+  If localStorage is empty, automatically pre-populates 6 realistic reservations spanning today and tomorrow with diverse statuses ('confirmed', 'seated', 'completed') across Anjuna, Morjim, Panaji, and Delhi.
+
+--------------------------------------------------------------------------------
+5.3 src/js/main.js (Customer Landing Page Controller & UI Interactions)
+--------------------------------------------------------------------------------
+Dependencies: Imports from `./data.js` and `./booking.js`.
+
+Features & Functions:
+- `showToast(message, type = 'info')`: Dynamic floating toast alerts with animations, supporting types 'success' (✅), 'error' (❌), 'info' (ℹ️), 'warning' (⚠️). Auto-dismisses in 3.5 seconds.
+- `DOMContentLoaded` initialization pipeline:
+  1. `seedDemoReservations()`
+  2. `initPreloader()`: 1.5s animated burger stacking preloader with a 4s safety timeout.
+  3. `initNavbar()`: Sticky navbar background blur on scroll (>50px), IntersectionObserver for active section link highlighting, and smooth-scrolling with an 80px offset for anchors.
+  4. `initMobileMenu()`: Fullscreen drawer menu with hamburger toggle and overlay click-outside handling.
+  5. `initScrollAnimations()`: Staggered reveal of `.animate-on-scroll` elements via IntersectionObserver.
+  6. `initParticles()`: Generates 30 floating glowing embers/particles with random trajectories, warm colors (#F59E0B, #EF4444, #FBBF24, #F87171, #FB923C), sizes, and delays in the hero section.
+  7. `initCounters()` & `animateCounter()`: Cubic ease-out number counter animation for hero stats: Locations (7), Rating (4.4★), and Happy Customers (50,000+).
+  8. `renderMenu(filter)`: Dynamic HTML rendering of burger cards with category badges (Veg, Popular, New), prices, descriptions, and feature tags. Re-observes cards for scroll animations.
+  9. `initMenuFilters()`: Tab filtering ('all', 'beef', 'chicken', 'veg', 'sides', 'shakes').
+  10. `renderLocations()`: Renders interactive cards for all 7 branches with photo overlays, table counts, vibe description, Google Maps links, and deep-link "Book Here" button that auto-selects the outlet dropdown.
+  11. `renderGallery()`: Renders 8 masonry-style image cards with hover zoom and captions.
+  12. `renderReviews()`: Custom carousel slider for diner reviews with navigation arrows, pagination dots, 6-second auto-rotation, and hover pause.
+  13. `setMinDate()`: Sets HTML5 date input `.min` attribute to current date (prevents booking dates in the past).
+  14. `initBookingForm()`:
+      - Validates required inputs: Full Name, Email (regex check), Phone, Location, Date, Time, Party Size.
+      - Triggers CSS keyframe shake animation on validation errors.
+      - Calls `createReservation()`.
+      - Displays modal confirmation popup `#booking-modal` with booking details, Booking ID, and a "Copy Booking ID" clipboard button.
+      - Displays celebratory toast notifications.
+  15. `initCheckBooking()`:
+      - Allows customers to type their Booking ID (e.g. BF-DM01) and click "Look Up".
+      - Displays colored status indicator, table info, and guest count.
+      - Provides an active "Cancel This Reservation" button (with confirmation modal) for confirmed bookings.
+
+--------------------------------------------------------------------------------
+5.4 src/js/manager.js (Manager Operations Dashboard & Floor Map)
+--------------------------------------------------------------------------------
+Dependencies: Imports from `./data.js` and `./booking.js`.
+
+State Management:
+- `currentLocation` (default: 'all')
+- `currentDate` (default: today's ISO date string)
+- `currentStatus` (default: 'all')
+- `searchQuery` (default: '')
+
+Functions & Workflows:
+- Auto-refresh: Automatically calls `refreshDashboard()` every 30 seconds (`setInterval`).
+- `initDate()`: Syncs date input with today's date, updates human-readable header date display.
+- `initFilters()`: Binds change listeners on location select dropdown and status filter pill buttons.
+- `initSearch()`: Debounced live text search (300ms) matching guest name, booking ID, phone number, or email.
+- `initActions()`: Manual "Refresh Data" and "Export Today's Data" CSV buttons.
+- `refreshDashboard()`:
+  - Fetches all reservations via `getAllReservations()`.
+  - Filters by selected date, selected location, selected status filter, and live text search query.
+  - Sorts reservations hierarchically: 'confirmed' first, then 'seated', 'completed', 'no-show', 'cancelled', and breaks ties by reservation time.
+  - Calls `updateStats()`, `renderTable()`, and `renderFloorMap()`.
+- `updateStats(reservations, date, location)`:
+  Calculates dynamic counts for: Total Active, Confirmed, Currently Seated, Total Guests, Cancelled, and No-Shows. Uses `animateStatValue()` for smooth counting numbers.
+- `renderTable(reservations)`:
+  Renders responsive table rows with guest contact info, party size, table & zone, and contextual action buttons:
+  - For Confirmed: "Seat" (sets status to 'seated'), "No-Show", "Cancel", and "Details".
+  - For Seated: "Complete" (sets status to 'completed') and "Details".
+- `renderFloorMap()`:
+  - Renders physical table cards for the chosen outlet grouped by zones.
+  - Compares each table's active reservations against current live time:
+    - If status === 'seated' -> Marks table as "Occupied" (Blue).
+    - If time slot overlaps now or upcoming today -> Marks table as "Reserved" (Amber).
+    - Otherwise -> Marks table as "Available" (Green).
+  - Clicking on a Reserved/Occupied table opens the detailed Reservation Modal.
+  - Clicking on an Available table triggers `showWalkInModal()`!
+- `showWalkInModal(table, zone)`:
+  Opens modal allowing the restaurant host to seat walk-in guests on the fly:
+  - Shows table capacity, selects guest count, optional phone and notes.
+  - Clicking "Seat Guest Now" invokes `createWalkInReservation()`, immediately occupies the table on the floor map, and adds the record to reservations.
+- `showReservationDetail(bookingId)`:
+  Comprehensive modal showing all metadata: booking ID, status badge, guest details, party size, table, occasion, notes, and exact timestamps (`createdAt`, `seatedAt`, `completedAt`, `cancelledAt`).
+- `exportData()`:
+  Generates a clean CSV file (`burger-factory-reservations-YYYY-MM-DD.csv`) with full booking records and downloads it directly via a dynamically generated Blob URL.
+
+================================================================================
+6. HTML & DOM ARCHITECTURE
+================================================================================
+
+--------------------------------------------------------------------------------
+6.1 index.html (Customer Facing Application)
+--------------------------------------------------------------------------------
+- Head:
+  - Responsive viewport, SEO meta tags, OpenGraph tags, Google Fonts (Playfair Display, Inter, Space Grotesk).
+  - Stylesheet link: `/src/styles/index.css`.
+- Key DOM Sections:
+  1. `#preloader`: Contains animated burger elements (`.bun-top`, `.patty`, `.lettuce`, `.bun-bottom`) and loader text.
+  2. `#navbar`: Sticky glassmorphic nav bar with `#nav-logo`, `#nav-links`, `#nav-book-btn`, `#nav-manager-btn`, and `#hamburger`.
+  3. `#mobile-menu`: Drawer overlay and mobile navigation links.
+  4. `#hero`: Parallax background layers (`.hero-layer-1`, `.hero-layer-2`), `#hero-particles` container, headline, CTA buttons (`#hero-book-btn`, `#hero-menu-btn`), stats counter container (`.stat-number` attributes `data-count`), and mouse scroll indicator.
+  5. `#about`: Brand heritage story, grid layout, feature cards with emoji badges.
+  6. `#menu`: Section heading, filter buttons container (`#menu-filters`), dynamic card grid (`#menu-grid`).
+  7. `#locations`: Dynamic grid container (`#locations-grid`) for 7 branch cards.
+  8. `#gallery`: Grid container (`#gallery-grid`) for photo showcase.
+  9. `#reviews`: Testimonials container (`#reviews-carousel`), navigation buttons (`#review-prev`, `#review-next`), and pagination dots (`#review-dots`).
+  10. `#booking`:
+      - Left column: Reservation perks list (Instant confirmation, SMS/Email reminder, easy cancellation, special occasions).
+      - Right column: Form `#booking-form` with inputs:
+        - `#booking-name` (text, required)
+        - `#booking-email` (email, required)
+        - `#booking-phone` (tel, required)
+        - `#booking-location` (select: anjuna, morjim, vagator, nerul, dona-paula, panaji, delhi)
+        - `#booking-date` (date, required)
+        - `#booking-time` (select: 12:30 to 22:00)
+        - `#booking-guests` (select: 1 to 8+)
+        - `#booking-seating` (select: any, indoor, outdoor, beachside)
+        - `#booking-occasion` (select: birthday, anniversary, date, business, other)
+        - `#booking-notes` (textarea)
+        - `#booking-submit` (submit button)
+  11. `#booking-modal`: Pop-up dialog with `#booking-confirmation` details container, copy booking ID button, and `#modal-close-btn`.
+  12. `#check-booking`: Self-service reservation lookup card with `#check-booking-id` input, `#check-booking-btn`, and dynamic results container `#check-booking-result`.
+  13. Footer: Brand summary, social media SVG links, quick links, branch list, operating hours, and copyright.
+- Scripts: Module entry `<script type="module" src="/src/js/main.js"></script>`.
+
+--------------------------------------------------------------------------------
+6.2 manager.html (Manager Operations Dashboard)
+--------------------------------------------------------------------------------
+- Head: Google Fonts, `/src/styles/index.css`, `/src/styles/manager.css`.
+- Key DOM Sections:
+  1. `.mgr-navbar`: Sticky bar with logo, Manager badge, live `#mgr-date-display`, and link back to customer site.
+  2. `.mgr-sidebar` (Left panel):
+     - Location filter dropdown: `#mgr-location-select` (All, Anjuna, Morjim, Vagator, Nerul, Dona Paula, Panaji, Delhi).
+     - Date picker: `#mgr-date-input`.
+     - Status filter buttons container: `#mgr-status-filters` (All, Confirmed, Seated, Completed, Cancelled, No-Show).
+     - Action buttons: `#mgr-refresh-btn` and `#mgr-export-btn`.
+  3. `.mgr-content` (Main right panel):
+     - KPI Stat Cards Grid (`#mgr-stats-grid`):
+       - `#stat-total-reservations` (Total Active)
+       - `#stat-confirmed` (Confirmed)
+       - `#stat-seated` (Currently Seated)
+       - `#stat-total-guests` (Total Guests)
+       - `#stat-cancelled` (Cancelled)
+       - `#stat-noshow` (No-Shows)
+     - Reservations Table Section:
+       - Search bar: `#mgr-search`.
+       - Table: `#mgr-reservations-table` with tbody `#mgr-reservations-body`.
+       - Empty state container: `#mgr-empty-state`.
+     - Floor Map Section (`.mgr-floor-section`):
+       - Legend: Available (Green), Reserved (Amber), Occupied (Blue).
+       - Visual floor map container: `#floor-map`.
+  4. `#mgr-detail-modal`: Modal dialog for reservation inspection and walk-in seating, with `#mgr-modal-title`, `#mgr-modal-body`, `#mgr-modal-actions`, and `#mgr-modal-close`.
+- Scripts: Module entry `<script type="module" src="/src/js/manager.js"></script>`.
+
+================================================================================
+7. STYLING SYSTEM & VISUAL DESIGN SPECIFICATION
+================================================================================
+
+--------------------------------------------------------------------------------
+7.1 src/styles/index.css (Design Tokens, Components & Utilities)
+--------------------------------------------------------------------------------
+Total Lines: ~2,066 lines of curated, modern Vanilla CSS.
+Theme: Sleek Dark Mode with warm amber & crimson gourmet culinary accents.
+
+CSS Custom Properties (Design Tokens):
+- Brand Colors:
+  - Primary Amber: `--color-primary: #F59E0B;`
+  - Primary Light: `--color-primary-light: #FBBF24;`
+  - Primary Dark: `--color-primary-dark: #D97706;`
+  - Primary Glow: `--color-primary-glow: rgba(245, 158, 11, 0.25);`
+  - Secondary Crimson: `--color-secondary: #EF4444;`
+  - Accent Emerald: `--color-accent: #10B981;`
+- Neutral & Dark Surfaces:
+  - Deep Background: `--color-bg: #0A0A0A;`
+  - Elevated Background: `--color-bg-elevated: #111111;`
+  - Card Surface: `--color-bg-card: #161616;`
+  - Card Hover Surface: `--color-bg-card-hover: #1C1C1C;`
+  - Form Input Surface: `--color-bg-input: #1A1A1A;`
+  - Border: `--color-border: rgba(255, 255, 255, 0.06);`
+- Glassmorphism:
+  - Glass Background: `--glass-bg: rgba(255, 255, 255, 0.03);`
+  - Glass Border: `--glass-border: rgba(255, 255, 255, 0.08);`
+  - Glass Blur: `--glass-blur: blur(20px);`
+- Typography Scale (Responsive fluid clamp):
+  - Fonts: Display: 'Playfair Display', Body: 'Inter', Mono: 'Space Grotesk'
+  - Fluid text sizes: `--text-xs` (0.75rem) to `--text-hero` (clamp(3.2rem, 7vw, 6rem))
+- Spacing Scale: `--space-xs` (0.25rem) to `--space-5xl` (8rem)
+- Elevation Shadows: Multi-tiered drop shadows and amber glow (`--shadow-glow`)
+- Component Styles:
+  - Modern buttons: `.btn-primary` (gradient amber with glow hover), `.btn-outline`, `.btn-ghost`.
+  - Form elements: Floating inputs with glow focus states, custom dropdown arrows.
+  - Toast system: Floating toasts with slide-in animations.
+  - Preloader: Pure CSS keyframe animated stacking burger.
+
+--------------------------------------------------------------------------------
+7.2 src/styles/manager.css (Manager Admin Layout & Floor Map)
+--------------------------------------------------------------------------------
+Total Lines: ~768 lines.
+Specialized components:
+- Fixed desktop navbar with glassmorphism and real-time clock.
+- Two-column dashboard layout with sticky left sidebar (280px width) and scrollable main view.
+- KPI stats grid with responsive cards and custom SVG icon backgrounds.
+- High-density data table with rounded corners, row hover transitions, and status pill badges:
+  - Confirmed: Emerald green badge (`.status-confirmed`)
+  - Seated: Vibrant blue badge (`.status-seated`)
+  - Completed: Slate gray badge (`.status-completed`)
+  - Cancelled: Crimson red badge (`.status-cancelled`)
+  - No-Show: Amber badge (`.status-no-show`)
+- Table Floor Map (`.floor-map`):
+  - Responsive auto-fill CSS grid (`grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));`).
+  - Interactive table cards styled by status:
+    - Available: Border green, background subtle green tint, hover scale.
+    - Reserved: Border amber, shows upcoming reservation time and guest name.
+    - Occupied: Border blue, shows current seated guest name.
+  - Click-to-seat modal styling.
+
+================================================================================
+8. END-TO-END USER WORKFLOWS & ALGORITHMIC LOGIC
+================================================================================
+
+8.1 Customer Booking Flow:
+1. Customer enters landing page, browses menu, locations, or reviews.
+2. Clicks "Book a Table" (smooth scrolls to `#booking`).
+3. Fills in form (Name, Email, Phone, Outlet, Date, Time Slot, Party Size, Seating Preference, Occasion, Notes).
+4. Submits form:
+   - Client validates fields. If empty or email invalid, triggers visual error highlight and CSS shake animation.
+   - `checkAvailability()` is executed:
+     - Pulls all tables at chosen outlet.
+     - Filters by seating preference (indoor, outdoor, beachside).
+     - Filters by capacity >= party size.
+     - Sorts ascending by capacity to pick optimal fit table.
+     - Iterates through candidate tables; checks 90-minute time collision window against existing reservations in `localStorage`.
+   - If no tables fit, displays warning toast: "Sorry, all suitable tables are booked...".
+   - If available, constructs reservation with unique ID (e.g. "BF-3M9K"), writes to `localStorage`, and presents confirmation modal with copyable ID.
+
+8.2 Customer Reservation Lookup & Cancellation Flow:
+1. Guest scrolls to `#check-booking` section.
+2. Enters Booking ID into `#check-booking-id` and clicks "Look Up".
+3. System queries `lookupReservation(id)` from `localStorage`.
+4. If found, displays formatted card showing status, name, location, date, time, and assigned table.
+5. If status is 'confirmed', renders "Cancel This Reservation" button.
+6. Clicking cancel triggers confirmation prompt, updates status to 'cancelled' with ISO timestamp, and immediately refreshes display and stats.
+
+8.3 Manager Operations & Status Mutation Flow:
+1. Manager visits `/manager.html`.
+2. Dashboard auto-loads today's date, initializes stats counters, reservations table, and visual floor map.
+3. Manager can filter by location (e.g., Anjuna) to see outlet-specific data.
+4. When guest arrives: Manager clicks "Seat" button -> Reservation status changes to 'seated', `seatedAt` timestamp recorded, floor map turns table Blue (Occupied).
+5. When dining finishes: Manager clicks "Complete" -> Reservation marked 'completed', table on floor map turns Green (Available).
+6. If guest does not arrive: Manager clicks "No-Show" -> Status marked 'no-show', table freed.
+7. Background timer re-syncs dashboard every 30 seconds.
+
+8.4 Walk-In Floor Plan Seating Flow:
+1. Manager views the Visual Table Floor Map on `/manager.html`.
+2. Available tables appear green with their ID, type, and zone.
+3. Manager clicks an available table card -> triggers `showWalkInModal(table, zone)`.
+4. Modal opens with guest count options up to table capacity, optional name/phone.
+5. Manager clicks "Seat Guest Now" -> invokes `createWalkInReservation()`, creates record with status 'seated', and immediately turns the table blue on the map.
+
+8.5 CSV Reporting & Analytics Export:
+1. Manager clicks "Export Today's Data" button.
+2. System extracts filtered reservations for current date and location.
+3. Serializes records into RFC-compliant CSV format with escaped double quotes.
+4. Creates a downloadable Blob and triggers download: `burger-factory-reservations-YYYY-MM-DD.csv`.
+
+================================================================================
+9. CURRENT TECHNICAL DEBT, LIMITATIONS & ARCHITECTURAL GAPS
+================================================================================
+While the frontend UI, design system, and client logic are fully functional and
+feature-complete, the following architectural gaps exist for a production rollout:
+
+1. Persistence & State Storage:
+   - CURRENT: Uses browser `localStorage` (`bf_reservations`).
+   - GAP: Data is isolated to a single browser. If a customer books from their phone,
+     the manager cannot see it on their laptop! No database exists.
+2. Authentication & Authorization:
+   - CURRENT: Anyone who navigates to `/manager.html` has full access to view, edit,
+     and cancel all bookings.
+   - GAP: No authentication (JWT / session cookies), no role-based access control
+     (Host, Floor Manager, Admin, Owner).
+3. Backend Server & API Layer:
+   - CURRENT: Static client-only application bundled by Vite.
+   - GAP: No Node.js / Python / Go REST or GraphQL API backend; no server-side
+     validation; no connection pooling.
+4. Concurrency & Race Conditions:
+   - CURRENT: Two customers booking the same table simultaneously in different browsers
+     will both succeed locally because there is no centralized database transaction lock.
+   - GAP: Need ACID transactions, row-level locking, or Redis distributed locks.
+5. Real-Time Synchronization:
+   - CURRENT: 30-second client-side polling interval (`setInterval`).
+   - GAP: No WebSockets or Server-Sent Events (SSE) to push instant table status
+     changes to the floor manager in real-time.
+6. Notifications & Communications:
+   - CURRENT: Toast message saying "SMS/Email reminder" will be sent, but no external
+     communication service is connected.
+   - GAP: Need Twilio / WhatsApp Business API / SendGrid integration for automated
+     booking confirmation and reminder messages.
+7. Online Payments / Booking Deposits:
+   - CURRENT: Reservations are free with no deposit required.
+   - GAP: For large groups (e.g. 6-8+ guests), restaurants usually require a table
+     holding deposit via Razorpay or Stripe to prevent no-shows.
+8. Menu Management:
+   - CURRENT: Menu items, prices, and locations are hardcoded in `src/js/data.js`.
+   - GAP: Manager cannot mark an item as "86'd" (sold out), change prices, or add
+     daily specials without modifying source code.
+

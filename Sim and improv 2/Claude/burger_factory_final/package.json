@@ -1,0 +1,27 @@
+{
+  "name": "burger-factory-monorepo",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "dev:web": "npm run dev --workspace=@burger-factory/web",
+    "dev:api": "npm run dev --workspace=@burger-factory/api",
+    "build": "vite build",
+    "build:all": "npm run build --workspaces",
+    "preview": "vite preview",
+    "simulate": "node tools/simulate.mjs --spawn --days 7 --seed 42",
+    "simulate:claude": "node tools/simulate.mjs --spawn --days 7 --seed 42",
+    "simulate:glm": "node \"SIMULATION AND IMPROVEMENT/GLM 5.3/burger-factory-simulation/run.mjs\" --target http://localhost:3000 --tag standard --days 7 --accel 240",
+    "chat:sync": "node scripts/sync_chat_log.cjs",
+    "test:contract": "node tools/client_contract_test.mjs",
+    "test:final": "node tools/final_test.mjs"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}
